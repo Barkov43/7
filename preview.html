@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Цифровой паспорт промышленного туриста - preview</title>
+    <style>
+      :root {
+        --paper: #f5f7f2;
+        --ink: #263238;
+        --teal: #108079;
+        --amber: #e6a235;
+        --clay: #b95642;
+        --moss: #697f5b;
+        --line: #d8ded7;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      button, input { font: inherit; }
+      .shell { min-height: 100vh; }
+      .top {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(245,247,242,.96);
+      }
+      .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      .logo {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        background: var(--teal);
+        color: #fff;
+        font-weight: 800;
+      }
+      .brand p { margin: 0; color: var(--teal); font-size: 12px; font-weight: 800; text-transform: uppercase; }
+      .brand h1 { margin: 2px 0 0; font-size: 20px; line-height: 1.2; }
+      .layout {
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+      .nav {
+        position: sticky;
+        top: 70px;
+        height: calc(100vh - 70px);
+        padding: 14px;
+        border-right: 1px solid var(--line);
+        background: #fff;
+      }
+      .nav button {
+        display: flex;
+        width: 100%;
+        min-height: 44px;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--ink);
+        text-align: left;
+        font-weight: 750;
+        cursor: pointer;
+      }
+      .nav button.active { background: var(--teal); color: #fff; }
+      main { padding: 24px; }
+      .hero {
+        min-height: 430px;
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background-image: linear-gradient(90deg, rgba(245,247,242,.98), rgba(245,247,242,.66) 42%, rgba(245,247,242,.08)), url("client/public/assets/hero-industrial-new.png");
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 16px 48px rgba(38,50,56,.12);
+      }
+      .hero h2 { max-width: 620px; margin: 18px 0 14px; font-size: clamp(30px, 5vw, 54px); line-height: 1.05; }
+      .hero p { max-width: 600px; color: #53615a; line-height: 1.65; }
+      .tag {
+        display: inline-flex;
+        border-radius: 8px;
+        background: #fff;
+        padding: 8px 10px;
+        color: var(--teal);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+      .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+      .btn {
+        min-height: 44px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 0 16px;
+        color: var(--ink);
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .btn.primary { border-color: var(--teal); background: var(--teal); color: #fff; }
+      .grid { display: grid; gap: 14px; }
+      .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; }
+      .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 18px;
+      }
+      .card h3 { margin: 8px 0; }
+      .card p { color: #53615a; line-height: 1.55; }
+      .section-title { max-width: 780px; margin-bottom: 16px; }
+      .section-title h2 { margin: 0; font-size: 32px; }
+      .section-title p { color: #53615a; line-height: 1.6; }
+      .schedule { display: grid; gap: 12px; }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        padding: 16px;
+      }
+      .pill {
+        display: inline-flex;
+        margin-right: 6px;
+        border-radius: 8px;
+        background: #e7f2ef;
+        padding: 5px 8px;
+        color: var(--teal);
+        font-size: 12px;
+        font-weight: 800;
+      }
+      .test-options { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .choice {
+        min-height: 64px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--paper);
+        padding: 10px;
+        text-align: left;
+        font-weight: 750;
+      }
+      .choice.selected { border-color: var(--teal); background: #e7f2ef; color: var(--teal); }
+      .hidden { display: none; }
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        display: none;
+        place-items: center;
+        padding: 16px;
+        background: rgba(38,50,56,.45);
+      }
+      .modal.open { display: grid; }
+      .modal section {
+        width: min(560px, 100%);
+        border-radius: 8px;
+        background: var(--paper);
+        padding: 20px;
+      }
+      .form { display: grid; gap: 10px; }
+      .form input {
+        height: 44px;
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 0 12px;
+      }
+      @media (max-width: 860px) {
+        .layout { grid-template-columns: 1fr; }
+        .nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+        .metrics, .cards, .test-options { grid-template-columns: 1fr; }
+        .row { grid-template-columns: 1fr; }
+        main { padding: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="top">
+        <div class="brand">
+          <div class="logo">ЦП</div>
+          <div>
+            <p>Демо-платформа</p>
+            <h1>Цифровой паспорт промышленного туриста</h1>
+          </div>
+        </div>
+        <button class="btn primary" onclick="openRegister()">Регистрация</button>
+      </header>
+      <div class="layout">
+        <nav class="nav">
+          <button class="active" data-tab="platform">Платформа</button>
+          <button data-tab="enterprises">Предприятия</button>
+          <button data-tab="news">Новости</button>
+          <button data-tab="schedule">Расписание</button>
+          <button data-tab="test">Тест</button>
+          <button data-tab="passport">Паспорт</button>
+          <button data-tab="feedback">Обратная связь</button>
+          <button data-tab="admin">Админка</button>
+        </nav>
+        <main>
+          <section id="platform" class="tab">
+            <div class="hero">
+              <span class="tag">Страница внедрения модуля</span>
+              <h2>Модуль для региональной образовательной платформы</h2>
+              <p>Интеграция не реализуется в MVP. Этот демо-сайт показывает страницу, куда может быть встроен модуль для профориентации, расписания экскурсий и цифрового паспорта туриста.</p>
+              <div class="actions">
+                <button class="btn primary" onclick="switchTab('test')">Начать сценарий</button>
+                <button class="btn" onclick="switchTab('schedule')">Расписание</button>
+              </div>
+            </div>
+            <div class="grid metrics">
+              <div class="card"><p>Подготовлено экскурсий</p><h3>10 за месяц</h3></div>
+              <div class="card"><p>Целевая аудитория</p><h3>9-11 классы</h3></div>
+              <div class="card"><p>Выбор инженерных специальностей</p><h3>5-7%</h3></div>
+            </div>
+            <div class="card" style="margin-top:14px">
+              <h2>Новости предприятий</h2>
+              <p>Лента новостей встроена в модуль, как требовалось для MVP.</p>
+              <div class="grid cards" id="landingNews"></div>
+            </div>
+          </section>
+
+          <section id="enterprises" class="tab hidden">
+            <div class="section-title"><h2>Предприятия</h2><p>База предприятий заполняется командой проекта вручную на этапе MVP.</p></div>
+            <div class="grid cards" id="enterpriseCards"></div>
+          </section>
+
+          <section id="news" class="tab hidden">
+            <div class="section-title"><h2>Новости предприятий</h2><p>Сгенерированная демо-лента показывает, как предприятия могут публиковать обновления, а туристы — выбирать актуальные экскурсии.</p></div>
+            <div class="grid cards" id="newsCards"></div>
+          </section>
+
+          <section id="schedule" class="tab hidden">
+            <div class="section-title"><h2>Расписание экскурсий</h2><p>Пользователь выбирает слот, записывается и получает подтверждение с адресом и требованиями безопасности.</p></div>
+            <div class="schedule" id="scheduleRows"></div>
+          </section>
+
+          <section id="test" class="tab hidden">
+            <div class="section-title"><h2>Профориентационный тест</h2><p>Короткий сценарий после регистрации. Результат попадёт в паспорт.</p></div>
+            <div class="grid">
+              <div class="grid" id="testQuestions"></div>
+              <button class="btn primary" onclick="finishTest()">Получить рекомендацию</button>
+            </div>
+          </section>
+
+          <section id="passport" class="tab hidden">
+            <div class="section-title"><h2>Цифровой паспорт</h2><p>Здесь собираются профиль пользователя, рекомендация и подтверждения записей.</p></div>
+            <div class="grid cards">
+              <div class="card"><h3 id="userName">Гость платформы</h3><p id="userContact">Зарегистрируйтесь, чтобы сохранить паспорт.</p></div>
+              <div class="card"><h3>Рекомендация</h3><p id="careerResult">Пройдите тест, чтобы увидеть подходящее направление.</p></div>
+              <div class="card"><h3>Запись</h3><p id="bookingResult">После записи здесь появятся дата, адрес и комментарий предприятия.</p></div>
+              <div class="card"><h3>Обратная связь</h3><p id="feedbackResult">После экскурсии здесь появятся оценка и впечатления туриста.</p></div>
+            </div>
+          </section>
+
+          <section id="feedback" class="tab hidden">
+            <div class="section-title"><h2>Обратная связь после экскурсии</h2><p>После записи туристу нужно напомнить вернуться в веб-приложение, оценить прошедшую экскурсию, перейти к анкете в Яндексе и зафиксировать впечатления.</p></div>
+            <div class="grid cards">
+              <div class="card">
+                <span class="pill">Напоминание</span>
+                <h3 id="feedbackTripTitle">Сначала запишитесь на экскурсию</h3>
+                <p id="feedbackTripText">После записи здесь появятся данные экскурсии и ссылка на анкету.</p>
+                <div class="grid test-options" id="ratingOptions" style="margin-top:12px"></div>
+                <textarea id="impressions" rows="5" style="width:100%;margin-top:12px;border:1px solid var(--line);border-radius:8px;padding:12px" placeholder="Что понравилось, что было непонятно, какие подсказки помогли на маршруте"></textarea>
+                <label style="display:flex;gap:10px;align-items:flex-start;margin-top:12px;color:#53615a">
+                  <input id="yandexDone" type="checkbox" />
+                  Я прошёл Яндекс-анкету и хочу сохранить это в паспорте
+                </label>
+                <div class="actions">
+                  <a class="btn" href="https://forms.yandex.ru/cloud/industrial-tourist-feedback-demo/" target="_blank" rel="noreferrer" style="display:inline-flex;align-items:center;text-decoration:none">Открыть Яндекс-анкету</a>
+                  <button class="btn primary" onclick="saveFeedback()">Сохранить впечатления</button>
+                </div>
+              </div>
+              <div class="card">
+                <h3>Зачем это нужно</h3>
+                <p>Обратная связь закрывает сценарий MVP: пользователь возвращается после экскурсии, оценивает опыт и оставляет материал для улучшения маршрутов.</p>
+              </div>
+            </div>
+          </section>
+
+          <section id="admin" class="tab hidden">
+            <div class="section-title"><h2>Админка MVP</h2><p>Команда проекта управляет предприятиями, экскурсиями, новостями и текстовыми шаблонами.</p></div>
+            <div class="grid metrics">
+              <div class="card"><p>Предприятия</p><h3>3</h3></div>
+              <div class="card"><p>Экскурсии</p><h3>4</h3></div>
+              <div class="card"><p>Новости</p><h3>3</h3></div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <div class="modal" id="registerModal">
+      <section>
+        <h2>Регистрация туриста</h2>
+        <form class="form" onsubmit="register(event)">
+          <input required id="fullName" placeholder="ФИО" />
+          <input required id="email" type="email" placeholder="E-mail" />
+          <input required id="phone" placeholder="Номер телефона" />
+          <button class="btn primary" type="submit">Создать паспорт</button>
+          <button class="btn" type="button" onclick="closeRegister()">Отмена</button>
+        </form>
+      </section>
+    </div>
+
+    <script>
+      const enterprises = [
+        ['Вятский машиностроительный завод', 'Машиностроение', 'Киров, ул. Производственная, 14', 'Сборочный цех, контроль качества и учебная лаборатория.'],
+        ['Кировский биохимический кластер', 'Химия и лабораторная диагностика', 'Кирово-Чепецк, пр-т Индустриальный, 8', 'Маршрут от лабораторного анализа до безопасной упаковки.'],
+        ['ЛесТех Инжиниринг', 'Деревообработка и автоматизация', 'Слободской, ул. Северная, 22', 'Цифровое управление линиями и работа операторов ЧПУ.']
+      ];
+      const excursions = [
+        ['Инженерный маршрут: от чертежа до детали', 'Вятский машиностроительный завод', '18 июня, 10:30', 'Свободно 13 из 20', 'Встреча у проходной N2. Возьмите паспорт или студенческий билет.'],
+        ['Химия без мифов: безопасная лаборатория', 'Кировский биохимический кластер', '20 июня, 12:00', 'Свободно 6 из 16', 'Сбор группы у центральной проходной.'],
+        ['Автоматизация деревообработки', 'ЛесТех Инжиниринг', '24 июня, 11:00', 'Свободно 13 из 18', 'Ориентир - синяя навигационная стойка.']
+      ];
+      const news = [
+        ['Вятский машиностроительный завод', 'Завод открыл учебный участок для школьников', 'Стенды по мехатронике, робототехнике и контролю качества.'],
+        ['Кировский биохимический кластер', 'Лаборатория обновила маршрут', 'Добавлен блок про экологический контроль и цифровые журналы.'],
+        ['ЛесТех Инжиниринг', 'Студенты протестировали маршрут ЧПУ', 'Первые группы отметили понятную навигацию по рабочим зонам.'],
+        ['Вятский машиностроительный завод', 'Добавлена станция контроля качества', 'Туристы увидят, как инженеры проверяют точность деталей и ведут цифровой журнал.'],
+        ['Кировский биохимический кластер', 'Готов безопасный маршрут для школьных групп', 'Обновлены инструктаж, точки остановок и подсказки для сопровождающих преподавателей.'],
+        ['ЛесТех Инжиниринг', 'На линии ЧПУ покажут паспорт процесса', 'Экскурсия объяснит, какие данные собирает оборудование и как оператор принимает решения.']
+      ];
+      const questions = [
+        ['workstyle', 'Что вам интереснее на экскурсии?', [['engineer','Как создаётся изделие'], ['automation','Как работают цифровые линии'], ['safety','Как устроена безопасность']]],
+        ['task', 'Какую задачу вы бы выбрали в проектной команде?', [['automation','Настроить датчики и мониторинг'], ['safety','Найти опасные зоны маршрута'], ['engineer','Разобрать технологическую карту']]],
+        ['result', 'Какой результат кажется самым полезным?', [['safety','Понятный чек-лист ТБ'], ['engineer','Маршрут от сырья до продукта'], ['automation','Паспорт цифрового процесса']]],
+        ['environment', 'В какой среде вам комфортнее работать?', [['engineer','В цехе рядом с оборудованием'], ['automation','За пультом или экраном мониторинга'], ['safety','На маршруте, где нужно видеть риски']]],
+        ['tools', 'Какие инструменты кажутся вам ближе?', [['automation','Датчики, контроллеры и панели'], ['engineer','Чертежи, карты процессов и измерения'], ['safety','Инструктажи, чек-листы и знаки']]],
+        ['decision', 'Что вы сначала проверите перед запуском экскурсии?', [['safety','Безопасность маршрута'], ['engineer','Логику технологической цепочки'], ['automation','Работу цифровой навигации']]],
+        ['interest', 'Какая новость предприятия заинтересует вас сильнее?', [['engineer','Запущена новая линия'], ['automation','Внедрён цифровой двойник'], ['safety','Обновлены правила посещения']]],
+        ['document', 'Какой документ вы бы хотели собрать после экскурсии?', [['safety','Карту опасных зон'], ['engineer','Описание маршрута'], ['automation','Схему данных и операций']]],
+        ['teamrole', 'Какая роль в команде вам ближе?', [['automation','Настроить цифровой модуль'], ['safety','Проверить маршрут с охраной труда'], ['engineer','Объяснить производство']]],
+        ['feedback', 'Что важно спросить у туриста после посещения?', [['engineer','Какая технология стала понятнее'], ['safety','Где было сложно ориентироваться'], ['automation','Какие подсказки помогли']]]
+      ];
+      let selectedAnswers = {};
+      let selectedRating = 0;
+      let lastBooking = null;
+
+      function switchTab(id) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('hidden', tab.id !== id));
+        document.querySelectorAll('.nav button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === id));
+      }
+      document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
+      document.getElementById('enterpriseCards').innerHTML = enterprises.map(item => `
+        <article class="card"><span class="pill">${item[1]}</span><h3>${item[0]}</h3><p>${item[2]}</p><p>${item[3]}</p></article>
+      `).join('');
+      document.getElementById('landingNews').innerHTML = news.map(item => `
+        <article class="card"><span class="pill">${item[0]}</span><h3>${item[1]}</h3><p>${item[2]}</p></article>
+      `).join('');
+      document.getElementById('newsCards').innerHTML = news.map(item => `
+        <article class="card"><span class="pill">${item[0]}</span><h3>${item[1]}</h3><p>${item[2]}</p></article>
+      `).join('');
+
+      document.getElementById('scheduleRows').innerHTML = excursions.map((item, index) => `
+        <article class="row">
+          <div><span class="pill">${item[2]}</span><h3>${item[0]}</h3><p>${item[1]}</p><p>${item[4]}</p></div>
+          <div><p>${item[3]}</p><button class="btn primary" onclick="book(${index})">Записаться</button></div>
+        </article>
+      `).join('');
+
+      document.getElementById('testQuestions').innerHTML = questions.map((question, index) => `
+        <div class="card">
+          <h3>${index + 1}. ${question[1]}</h3>
+          <div class="grid test-options">
+            ${question[2].map(option => `<button class="choice" data-question="${question[0]}" data-answer="${option[0]}">${option[1]}</button>`).join('')}
+          </div>
+        </div>
+      `).join('');
+      document.querySelectorAll('.choice').forEach(btn => btn.addEventListener('click', () => {
+        selectedAnswers[btn.dataset.question] = btn.dataset.answer;
+        document.querySelectorAll(`.choice[data-question="${btn.dataset.question}"]`).forEach(item => item.classList.remove('selected'));
+        btn.classList.add('selected');
+      }));
+
+      document.getElementById('ratingOptions').innerHTML = [1, 2, 3, 4, 5].map(value => `
+        <button class="choice" data-rating="${value}">★ ${value}</button>
+      `).join('');
+      document.querySelectorAll('[data-rating]').forEach(btn => btn.addEventListener('click', () => {
+        selectedRating = Number(btn.dataset.rating);
+        document.querySelectorAll('[data-rating]').forEach(item => item.classList.remove('selected'));
+        btn.classList.add('selected');
+      }));
+
+      function openRegister() { document.getElementById('registerModal').classList.add('open'); }
+      function closeRegister() { document.getElementById('registerModal').classList.remove('open'); }
+      function register(event) {
+        event.preventDefault();
+        document.getElementById('userName').textContent = document.getElementById('fullName').value;
+        document.getElementById('userContact').textContent = document.getElementById('email').value + ', ' + document.getElementById('phone').value;
+        closeRegister();
+        switchTab('passport');
+      }
+      function finishTest() {
+        const values = Object.values(selectedAnswers);
+        if (values.length < questions.length) {
+          alert('Ответьте на все 10 вопросов теста.');
+          return;
+        }
+        const score = values.reduce((acc, item) => ({ ...acc, [item]: (acc[item] || 0) + 1 }), {});
+        const profile = Object.entries(score).sort((a, b) => b[1] - a[1])[0][0];
+        const result = profile === 'safety' ? 'Специалист по промышленной безопасности' : profile === 'engineer' ? 'Инженер-технолог' : 'Инженер по автоматизации процессов';
+        document.getElementById('careerResult').textContent = result + ': направление подобрано по ответам теста.';
+        switchTab('passport');
+      }
+      function book(index) {
+        const item = excursions[index];
+        lastBooking = item;
+        document.getElementById('bookingResult').textContent = `Запись подтверждена: ${item[1]}, ${item[2]}. ${item[4]} Требования ТБ: закрытая обувь и сопровождение инженера. После экскурсии вернитесь в приложение, откройте Яндекс-анкету и сохраните впечатления.`;
+        document.getElementById('feedbackTripTitle').textContent = item[1];
+        document.getElementById('feedbackTripText').textContent = `После посещения ${item[2]} оцените маршрут, заполните Яндекс-анкету и запишите впечатления.`;
+        switchTab('passport');
+      }
+      function saveFeedback() {
+        const text = document.getElementById('impressions').value.trim();
+        if (!selectedRating || !text) {
+          alert('Поставьте оценку и напишите впечатления.');
+          return;
+        }
+        const yandex = document.getElementById('yandexDone').checked ? 'Яндекс-анкета пройдена' : 'Яндекс-анкета ожидает прохождения';
+        document.getElementById('feedbackResult').textContent = `Оценка ${selectedRating}/5. ${text}. ${yandex}.`;
+        switchTab('passport');
+      }
+    </script>
+  </body>
+</html>

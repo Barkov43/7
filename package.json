@@ -1,0 +1,17 @@
+{
+  "name": "industrial-tourist-passport",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Demo web module for the Digital Passport of an Industrial Tourist",
+  "scripts": {
+    "install:all": "npm install --prefix client && npm install --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
+
