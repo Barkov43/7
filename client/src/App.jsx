@@ -7,8 +7,8 @@ import {
   ClipboardCheck,
   FileText,
   GraduationCap,
-  Home,
   LayoutDashboard,
+  LockKeyhole,
   LogIn,
   Menu,
   MessageSquareText,
@@ -32,13 +32,13 @@ const YANDEX_FEEDBACK_URL = 'https://forms.yandex.ru/cloud/industrial-tourist-fe
 
 const tabs = [
   { id: 'platform', label: 'Платформа', icon: LayoutDashboard },
-  { id: 'enterprises', label: 'Предприятия', icon: Building2 },
+  { id: 'enterprises', label: 'Предприятия', icon: Building2, keyModule: true },
   { id: 'news', label: 'Новости', icon: Newspaper },
-  { id: 'schedule', label: 'Расписание', icon: CalendarDays },
-  { id: 'test', label: 'Тест', icon: GraduationCap },
-  { id: 'passport', label: 'Паспорт', icon: FileText },
-  { id: 'feedback', label: 'Обратная связь', icon: MessageSquareText },
-  { id: 'admin', label: 'Админка', icon: ShieldCheck }
+  { id: 'schedule', label: 'Расписание', icon: CalendarDays, keyModule: true },
+  { id: 'test', label: 'Тест', icon: GraduationCap, keyModule: true },
+  { id: 'passport', label: 'Мой цифровой паспорт', icon: FileText, requiresAuth: true },
+  { id: 'feedback', label: 'Обратная связь', icon: MessageSquareText, requiresAuth: true },
+  { id: 'admin', label: 'Админка', icon: ShieldCheck, adminOnly: true }
 ];
 
 const testQuestions = [
@@ -230,6 +230,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [bookingTarget, setBookingTarget] = useState(null);
   const [bookingForm, setBookingForm] = useState({ visitor_name: '', email: '', phone: '' });
   const [confirmation, setConfirmation] = useState(null);
@@ -279,6 +280,21 @@ export default function App() {
     setRegisterOpen(false);
   }
 
+  function submitLogin(event) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const identifier = String(form.get('identifier') || '').trim();
+    const isAdmin = identifier.toLowerCase() === 'admin' || identifier.toLowerCase() === 'admin@demo.ru';
+    saveUser({
+      id: isAdmin ? 1 : Date.now(),
+      full_name: isAdmin ? 'Администратор' : identifier.split('@')[0] || 'Пользователь',
+      email: identifier.includes('@') ? identifier : `${identifier || 'user'}@demo.ru`,
+      phone: '',
+      isAdmin
+    });
+    setLoginOpen(false);
+  }
+
   async function submitCareerTest() {
     const values = testQuestions.map((question) => answers[question.id]).filter(Boolean);
     if (values.length !== testQuestions.length) return;
@@ -288,10 +304,15 @@ export default function App() {
     } catch {
       setCareerResult(fallbackCareerResult(values));
     }
-    setActiveTab('passport');
+    if (user) setActiveTab('passport');
+    else setLoginOpen(true);
   }
 
   function openBooking(excursion) {
+    if (!user) {
+      setLoginOpen(true);
+      return;
+    }
     setBookingTarget(excursion);
     setBookingForm({
       visitor_name: user?.full_name || '',
@@ -341,37 +362,52 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-paper text-ink">
-      <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-4 py-3">
+      <header className="sticky top-0 z-40 border-b border-[#dce3f2] bg-white">
+        <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
             <IconButton className="lg:hidden" aria-label="Меню" title="Меню" onClick={() => setNavOpen(true)}>
               <Menu size={18} />
             </IconButton>
-            <div className="grid h-10 w-10 place-items-center rounded-lg bg-teal text-white">
-              <Home size={20} />
+            <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#2858d6] text-sm font-black text-white">
+              ПН
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold uppercase tracking-normal text-teal">Демо-платформа</p>
-              <h1 className="truncate text-lg font-bold sm:text-xl">Цифровой паспорт промышленного туриста</h1>
+              <h1 className="truncate text-lg font-bold text-[#192235] sm:text-xl">ПромНавигатор</h1>
+              <p className="truncate text-xs font-medium text-[#7a8496]">Профориентационная платформа</p>
             </div>
           </div>
+          <div className="hidden items-center gap-1 xl:flex">
+            <button type="button" onClick={() => setActiveTab('platform')} className="focus-ring rounded-lg bg-[#eef3ff] px-4 py-3 text-sm font-bold text-[#2858d6]">Главная</button>
+            <span className="px-3 py-3 text-sm font-semibold text-[#596274]">О платформе</span>
+            <span className="px-3 py-3 text-sm font-semibold text-[#596274]">Вакансии</span>
+            <span className="px-3 py-3 text-sm font-semibold text-[#596274]">Контакты</span>
+          </div>
           <div className="flex items-center gap-2">
-            <span className="hidden rounded-lg border border-line bg-white px-3 py-2 text-xs font-semibold text-[#66736c] sm:inline-flex">
-              {apiMode === 'api' ? 'API подключен' : 'Демо-данные'}
-            </span>
             <IconButton aria-label="Уведомления" title="Уведомления">
               <Bell size={18} />
             </IconButton>
             {user ? (
-              <IconButton title={user.full_name}>
-                <UserRound size={18} />
-                <span className="hidden sm:inline">{user.full_name.split(' ')[0]}</span>
-              </IconButton>
+              <>
+                <IconButton title={user.full_name}>
+                  <UserRound size={18} />
+                  <span className="hidden sm:inline">{user.full_name.split(' ')[0]}</span>
+                </IconButton>
+                {user.isAdmin && (
+                  <button type="button" onClick={() => setActiveTab('admin')} className="focus-ring hidden h-11 items-center rounded-lg bg-[#2858d6] px-5 text-sm font-bold text-white sm:inline-flex">
+                    Админка
+                  </button>
+                )}
+              </>
             ) : (
-              <PrimaryButton onClick={() => setRegisterOpen(true)}>
-                <LogIn size={18} />
-                Регистрация
-              </PrimaryButton>
+              <>
+                <IconButton onClick={() => setLoginOpen(true)}>
+                  <LogIn size={18} />
+                  <span className="hidden sm:inline">Войти</span>
+                </IconButton>
+                <button type="button" onClick={() => setRegisterOpen(true)} className="focus-ring h-11 rounded-lg bg-[#2858d6] px-4 text-sm font-bold text-white transition hover:bg-[#1e47b6]">
+                  Регистрация
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -389,30 +425,40 @@ export default function App() {
               </IconButton>
             </div>
             <div className="grid gap-2">
-              {tabs.map((tab) => {
+              {tabs.filter((tab) => !tab.adminOnly || user?.isAdmin).map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
+                const isLocked = tab.requiresAuth && !user;
                 return (
                   <button
                     key={tab.id}
                     type="button"
+                    disabled={isLocked}
                     onClick={() => {
+                      if (isLocked) return;
                       setActiveTab(tab.id);
                       setNavOpen(false);
                     }}
-                    className={`focus-ring flex h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-semibold transition ${
-                      isActive ? 'bg-teal text-white' : 'text-ink hover:bg-[#eef3ee]'
+                    className={`focus-ring flex min-h-11 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-left text-sm font-semibold transition ${
+                      isActive
+                        ? 'border-[#2858d6] bg-[#2858d6] text-white'
+                        : tab.keyModule
+                          ? 'border-[#b9caff] bg-[#f3f6ff] text-[#2858d6] hover:bg-[#e7edff]'
+                          : isLocked
+                            ? 'cursor-not-allowed border-transparent bg-[#f4f5f7] text-[#9aa1ad]'
+                            : 'border-transparent text-ink hover:bg-[#eef3ee]'
                     }`}
                   >
-                    <Icon size={18} />
-                    {tab.label}
+                    <span className="flex min-w-0 items-center gap-3">
+                      {isLocked ? <LockKeyhole size={18} /> : <Icon size={18} />}
+                      <span>{tab.label}</span>
+                    </span>
+                    {tab.keyModule && !isActive && (
+                      <span className="rounded border border-[#9db5f7] bg-white px-1.5 py-0.5 text-[10px] font-black uppercase text-[#2858d6]">Модуль</span>
+                    )}
                   </button>
                 );
               })}
-            </div>
-            <div className="mt-6 rounded-lg border border-line bg-paper p-4">
-              <p className="text-xs font-bold uppercase text-[#66736c]">MVP-цель</p>
-              <p className="mt-2 text-sm">10 экскурсий подготовлены через систему за 1 месяц вместо ручной подготовки.</p>
             </div>
           </nav>
         </aside>
@@ -420,32 +466,35 @@ export default function App() {
         <main className="min-w-0 px-4 py-5 lg:px-6">
           {activeTab === 'platform' && (
             <section className="grid gap-5">
-              <div className="hero-image min-h-[430px] overflow-hidden rounded-lg border border-line bg-white p-5 shadow-soft">
-                <div className="max-w-2xl">
-                  <span className="inline-flex rounded-lg bg-white px-3 py-2 text-xs font-bold uppercase text-teal">
-                    Страница внедрения модуля
-                  </span>
-                  <h2 className="mt-5 max-w-xl text-3xl font-bold leading-tight sm:text-5xl">{platform.title}</h2>
-                  <p className="mt-4 max-w-xl text-base leading-7 text-[#53615a]">{platform.status}</p>
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <PrimaryButton onClick={() => (user ? setActiveTab('test') : setRegisterOpen(true))}>
+              <div className="hero-image flex min-h-[500px] items-center overflow-hidden rounded-lg border border-[#244ba9] p-6 shadow-soft sm:p-10">
+                <div className="max-w-2xl text-white">
+                  <h2 className="max-w-xl text-4xl font-bold leading-tight sm:text-6xl">Цифровой паспорт промышленного туриста</h2>
+                  <p className="mt-5 max-w-xl text-base leading-7 text-white/85 sm:text-lg">
+                    Выбирайте предприятия, проходите профориентационный тест, записывайтесь на экскурсии
+                    и сохраняйте результаты в личном цифровом паспорте.
+                  </p>
+                  <div className="mt-7 flex flex-wrap gap-3">
+                    <button type="button" onClick={() => setActiveTab('test')} className="focus-ring inline-flex h-12 items-center gap-2 rounded-lg bg-white px-5 text-sm font-bold text-[#244ba9] transition hover:bg-[#eef3ff]">
                       <Sparkles size={18} />
-                      Начать сценарий
-                    </PrimaryButton>
-                    <IconButton onClick={() => setActiveTab('schedule')}>
+                      Пройти тест
+                    </button>
+                    <button type="button" onClick={() => setActiveTab('schedule')} className="focus-ring inline-flex h-12 items-center gap-2 rounded-lg border border-white/60 bg-white/10 px-5 text-sm font-bold text-white transition hover:bg-white/20">
                       <CalendarDays size={18} />
-                      Расписание
-                    </IconButton>
+                      Смотреть экскурсии
+                    </button>
                   </div>
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                {platform.metrics.map((metric) => (
-                  <Metric key={metric.label} label={metric.label} value={metric.value} />
-                ))}
-              </div>
               <ModuleFlow />
               <NewsList news={news} compact />
+              <section className="border-t border-line pt-5">
+                <p className="mb-3 text-xs font-bold uppercase text-[#7a8496]">Факты проекта</p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {platform.metrics.map((metric) => (
+                    <Metric key={metric.label} label={metric.label} value={metric.value} />
+                  ))}
+                </div>
+              </section>
             </section>
           )}
 
@@ -551,9 +600,9 @@ export default function App() {
             </section>
           )}
 
-          {activeTab === 'passport' && (
+          {activeTab === 'passport' && user && (
             <section className="grid gap-4">
-              <SectionTitle title="Цифровой паспорт" text="Здесь собираются профиль, результат теста, записи на экскурсии и будущие версии документов." />
+              <SectionTitle title="Мой цифровой паспорт" text="Здесь собираются профиль, результат теста, записи на экскурсии и сохранённые впечатления." />
               <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
                 <div className="rounded-lg border border-line bg-white p-4">
                   <div className="grid h-20 w-20 place-items-center rounded-lg bg-[#e7f2ef] text-teal">
@@ -708,7 +757,7 @@ export default function App() {
             </section>
           )}
 
-          {activeTab === 'admin' && (
+          {activeTab === 'admin' && user?.isAdmin && (
             <section className="grid gap-4">
               <SectionTitle title="Админка MVP" text="В первой версии данные про предприятия заводит команда проекта, без личного кабинета предприятия." />
               <div className="grid gap-3 md:grid-cols-4">
@@ -752,6 +801,19 @@ export default function App() {
             <PrimaryButton className="mt-2 w-full" type="submit">
               <BadgeCheck size={18} />
               Создать паспорт
+            </PrimaryButton>
+          </form>
+        </Modal>
+      )}
+
+      {loginOpen && (
+        <Modal title="Вход в платформу" onClose={() => setLoginOpen(false)}>
+          <form className="grid gap-3" onSubmit={submitLogin}>
+            <TextInput name="identifier" required placeholder="E-mail или логин" />
+            <TextInput name="password" required type="password" minLength="4" placeholder="Пароль" />
+            <PrimaryButton className="mt-2 w-full" type="submit">
+              <LogIn size={18} />
+              Войти
             </PrimaryButton>
           </form>
         </Modal>
@@ -816,7 +878,6 @@ function NewsList({ news, compact = false, variant = 'compact' }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold">Новости предприятий</h2>
-          {compact && <p className="mt-1 text-sm text-[#53615a]">Лента новостей встроена в модуль, как требовалось для MVP.</p>}
         </div>
       </div>
       <div className={`mt-4 grid gap-3 ${variant === 'full' ? 'md:grid-cols-2 xl:grid-cols-3' : 'lg:grid-cols-3'}`}>

@@ -13,11 +13,13 @@
         --clay: #b95642;
         --moss: #697f5b;
         --line: #d8ded7;
+        --blue: #2858d6;
+        --blue-soft: #f3f6ff;
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        background: var(--paper);
+        background: #f4f6fa;
         color: var(--ink);
         font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
@@ -32,8 +34,8 @@
         align-items: center;
         gap: 16px;
         padding: 14px 20px;
-        border-bottom: 1px solid var(--line);
-        background: rgba(245,247,242,.96);
+        border-bottom: 1px solid #dce3f2;
+        background: #fff;
       }
       .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
       .logo {
@@ -42,12 +44,17 @@
         width: 42px;
         height: 42px;
         border-radius: 8px;
-        background: var(--teal);
+        background: var(--blue);
         color: #fff;
         font-weight: 800;
       }
-      .brand p { margin: 0; color: var(--teal); font-size: 12px; font-weight: 800; text-transform: uppercase; }
-      .brand h1 { margin: 2px 0 0; font-size: 20px; line-height: 1.2; }
+      .brand p { margin: 2px 0 0; color: #7a8496; font-size: 12px; font-weight: 650; }
+      .brand h1 { margin: 0; font-size: 20px; line-height: 1.2; }
+      .platform-links { display: flex; align-items: center; gap: 4px; }
+      .platform-links span,
+      .platform-links button { border: 0; border-radius: 8px; background: transparent; padding: 12px 14px; color: #596274; font-weight: 750; }
+      .platform-links button { background: #eef3ff; color: var(--blue); }
+      .auth-actions { display: flex; align-items: center; gap: 8px; }
       .layout {
         display: grid;
         grid-template-columns: 250px 1fr;
@@ -70,7 +77,7 @@
         gap: 10px;
         margin-bottom: 8px;
         padding: 10px 12px;
-        border: 0;
+        border: 1px solid transparent;
         border-radius: 8px;
         background: transparent;
         color: var(--ink);
@@ -78,20 +85,44 @@
         font-weight: 750;
         cursor: pointer;
       }
-      .nav button.active { background: var(--teal); color: #fff; }
+      .nav button.active { border-color: var(--blue); background: var(--blue); color: #fff; }
+      .nav button.key-module:not(.active) {
+        justify-content: space-between;
+        border-color: #b9caff;
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+      .nav button.key-module:not(.active)::after {
+        content: "Модуль";
+        border: 1px solid #9db5f7;
+        border-radius: 4px;
+        background: #fff;
+        padding: 2px 5px;
+        font-size: 9px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+      .nav button.locked {
+        cursor: not-allowed;
+        background: #f4f5f7;
+        color: #9aa1ad;
+      }
       main { padding: 24px; }
       .hero {
-        min-height: 430px;
-        padding: 28px;
-        border: 1px solid var(--line);
+        display: flex;
+        min-height: 500px;
+        align-items: center;
+        padding: 40px;
+        border: 1px solid #244ba9;
         border-radius: 8px;
-        background-image: linear-gradient(90deg, rgba(245,247,242,.98), rgba(245,247,242,.66) 42%, rgba(245,247,242,.08)), url("client/public/assets/hero-industrial-new.png");
+        background-image: linear-gradient(90deg, rgba(20,55,145,.97), rgba(27,70,174,.9) 48%, rgba(24,72,176,.7)), url("client/public/assets/hero-industrial-new.png");
         background-size: cover;
         background-position: center;
         box-shadow: 0 16px 48px rgba(38,50,56,.12);
       }
-      .hero h2 { max-width: 620px; margin: 18px 0 14px; font-size: clamp(30px, 5vw, 54px); line-height: 1.05; }
-      .hero p { max-width: 600px; color: #53615a; line-height: 1.65; }
+      .hero > div { max-width: 700px; color: #fff; }
+      .hero h2 { max-width: 660px; margin: 0 0 18px; font-size: clamp(38px, 5vw, 64px); line-height: 1.05; }
+      .hero p { max-width: 620px; color: rgba(255,255,255,.86); font-size: 18px; line-height: 1.6; }
       .tag {
         display: inline-flex;
         border-radius: 8px;
@@ -113,9 +144,13 @@
         font-weight: 800;
         cursor: pointer;
       }
-      .btn.primary { border-color: var(--teal); background: var(--teal); color: #fff; }
+      .btn.primary { border-color: var(--blue); background: var(--blue); color: #fff; }
+      .hero .btn.primary { border-color: #fff; background: #fff; color: #244ba9; }
+      .hero .btn.secondary { border-color: rgba(255,255,255,.65); background: rgba(255,255,255,.1); color: #fff; }
       .grid { display: grid; gap: 14px; }
       .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; }
+      .facts { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 18px; }
+      .facts > p { color: #7a8496; font-size: 12px; font-weight: 850; text-transform: uppercase; }
       .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .card {
         border: 1px solid var(--line);
@@ -186,6 +221,7 @@
         padding: 0 12px;
       }
       @media (max-width: 860px) {
+        .platform-links { display: none; }
         .layout { grid-template-columns: 1fr; }
         .nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
         .metrics, .cards, .test-options { grid-template-columns: 1fr; }
@@ -198,45 +234,57 @@
     <div class="shell">
       <header class="top">
         <div class="brand">
-          <div class="logo">ЦП</div>
+          <div class="logo">ПН</div>
           <div>
-            <p>Демо-платформа</p>
-            <h1>Цифровой паспорт промышленного туриста</h1>
+            <h1>ПромНавигатор</h1>
+            <p>Профориентационная платформа</p>
           </div>
         </div>
-        <button class="btn primary" onclick="openRegister()">Регистрация</button>
+        <div class="platform-links">
+          <button type="button" onclick="switchTab('platform')">Главная</button>
+          <span>О платформе</span>
+          <span>Вакансии</span>
+          <span>Контакты</span>
+        </div>
+        <div class="auth-actions" id="authActions">
+          <button class="btn" onclick="openLogin()">Войти</button>
+          <button class="btn primary" onclick="openRegister()">Регистрация</button>
+        </div>
       </header>
       <div class="layout">
         <nav class="nav">
           <button class="active" data-tab="platform">Платформа</button>
-          <button data-tab="enterprises">Предприятия</button>
+          <button class="key-module" data-tab="enterprises">Предприятия</button>
           <button data-tab="news">Новости</button>
-          <button data-tab="schedule">Расписание</button>
-          <button data-tab="test">Тест</button>
-          <button data-tab="passport">Паспорт</button>
-          <button data-tab="feedback">Обратная связь</button>
-          <button data-tab="admin">Админка</button>
+          <button class="key-module" data-tab="schedule">Расписание</button>
+          <button class="key-module" data-tab="test">Тест</button>
+          <button class="locked" id="passportNav" data-tab="passport">🔒 Мой цифровой паспорт</button>
+          <button class="locked" id="feedbackNav" data-tab="feedback">🔒 Обратная связь</button>
+          <button class="hidden" id="adminNav" data-tab="admin">Админка</button>
         </nav>
         <main>
           <section id="platform" class="tab">
             <div class="hero">
-              <span class="tag">Страница внедрения модуля</span>
-              <h2>Модуль для региональной образовательной платформы</h2>
-              <p>Интеграция не реализуется в MVP. Этот демо-сайт показывает страницу, куда может быть встроен модуль для профориентации, расписания экскурсий и цифрового паспорта туриста.</p>
-              <div class="actions">
-                <button class="btn primary" onclick="switchTab('test')">Начать сценарий</button>
-                <button class="btn" onclick="switchTab('schedule')">Расписание</button>
+              <div>
+                <h2>Цифровой паспорт промышленного туриста</h2>
+                <p>Выбирайте предприятия, проходите профориентационный тест, записывайтесь на экскурсии и сохраняйте результаты в личном цифровом паспорте.</p>
+                <div class="actions">
+                  <button class="btn primary" onclick="startTest()">Пройти тест</button>
+                  <button class="btn secondary" onclick="switchTab('schedule')">Смотреть экскурсии</button>
+                </div>
               </div>
-            </div>
-            <div class="grid metrics">
-              <div class="card"><p>Подготовлено экскурсий</p><h3>10 за месяц</h3></div>
-              <div class="card"><p>Целевая аудитория</p><h3>9-11 классы</h3></div>
-              <div class="card"><p>Выбор инженерных специальностей</p><h3>5-7%</h3></div>
             </div>
             <div class="card" style="margin-top:14px">
               <h2>Новости предприятий</h2>
-              <p>Лента новостей встроена в модуль, как требовалось для MVP.</p>
               <div class="grid cards" id="landingNews"></div>
+            </div>
+            <div class="facts">
+              <p>Факты проекта</p>
+              <div class="grid metrics">
+                <div class="card"><p>Подготовлено экскурсий</p><h3>10 за месяц</h3></div>
+                <div class="card"><p>Целевая аудитория</p><h3>9-11 классы</h3></div>
+                <div class="card"><p>Выбор инженерных специальностей</p><h3>5-7%</h3></div>
+              </div>
             </div>
           </section>
 
@@ -264,7 +312,7 @@
           </section>
 
           <section id="passport" class="tab hidden">
-            <div class="section-title"><h2>Цифровой паспорт</h2><p>Здесь собираются профиль пользователя, рекомендация и подтверждения записей.</p></div>
+            <div class="section-title"><h2>Мой цифровой паспорт</h2><p>Здесь собираются профиль пользователя, рекомендация, подтверждения записей и сохранённые впечатления.</p></div>
             <div class="grid cards">
               <div class="card"><h3 id="userName">Гость платформы</h3><p id="userContact">Зарегистрируйтесь, чтобы сохранить паспорт.</p></div>
               <div class="card"><h3>Рекомендация</h3><p id="careerResult">Пройдите тест, чтобы увидеть подходящее направление.</p></div>
@@ -323,6 +371,18 @@
       </section>
     </div>
 
+    <div class="modal" id="loginModal">
+      <section>
+        <h2>Вход в платформу</h2>
+        <form class="form" onsubmit="login(event)">
+          <input required id="loginIdentifier" placeholder="E-mail или логин" />
+          <input required id="loginPassword" type="password" minlength="4" placeholder="Пароль" />
+          <button class="btn primary" type="submit">Войти</button>
+          <button class="btn" type="button" onclick="closeLogin()">Отмена</button>
+        </form>
+      </section>
+    </div>
+
     <script>
       const enterprises = [
         ['Вятский машиностроительный завод', 'Машиностроение', 'Киров, ул. Производственная, 14', 'Сборочный цех, контроль качества и учебная лаборатория.'],
@@ -357,8 +417,14 @@
       let selectedAnswers = {};
       let selectedRating = 0;
       let lastBooking = null;
+      let currentUser = null;
 
       function switchTab(id) {
+        if ((id === 'passport' || id === 'feedback') && !currentUser) {
+          openLogin();
+          return;
+        }
+        if (id === 'admin' && !currentUser?.isAdmin) return;
         document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('hidden', tab.id !== id));
         document.querySelectorAll('.nav button').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === id));
       }
@@ -405,12 +471,51 @@
 
       function openRegister() { document.getElementById('registerModal').classList.add('open'); }
       function closeRegister() { document.getElementById('registerModal').classList.remove('open'); }
+      function openLogin() { document.getElementById('loginModal').classList.add('open'); }
+      function closeLogin() { document.getElementById('loginModal').classList.remove('open'); }
+      function startTest() {
+        switchTab('test');
+      }
+      function applyAuth(user) {
+        currentUser = user;
+        document.getElementById('passportNav').classList.remove('locked');
+        document.getElementById('passportNav').textContent = 'Мой цифровой паспорт';
+        document.getElementById('feedbackNav').classList.remove('locked');
+        document.getElementById('feedbackNav').textContent = 'Обратная связь';
+        document.getElementById('adminNav').classList.toggle('hidden', !user.isAdmin);
+        document.getElementById('authActions').innerHTML = `
+          <button class="btn" onclick="switchTab('passport')">${user.name}</button>
+          ${user.isAdmin ? `<button class="btn primary" onclick="switchTab('admin')">Админка</button>` : ''}
+        `;
+      }
       function register(event) {
         event.preventDefault();
-        document.getElementById('userName').textContent = document.getElementById('fullName').value;
-        document.getElementById('userContact').textContent = document.getElementById('email').value + ', ' + document.getElementById('phone').value;
+        const user = {
+          name: document.getElementById('fullName').value,
+          email: document.getElementById('email').value,
+          phone: document.getElementById('phone').value,
+          isAdmin: false
+        };
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userContact').textContent = user.email + ', ' + user.phone;
+        applyAuth(user);
         closeRegister();
         switchTab('passport');
+      }
+      function login(event) {
+        event.preventDefault();
+        const identifier = document.getElementById('loginIdentifier').value.trim();
+        const isAdmin = identifier.toLowerCase() === 'admin' || identifier.toLowerCase() === 'admin@demo.ru';
+        const user = {
+          name: isAdmin ? 'Администратор' : (identifier.split('@')[0] || 'Пользователь'),
+          email: identifier.includes('@') ? identifier : `${identifier || 'user'}@demo.ru`,
+          phone: '',
+          isAdmin
+        };
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userContact').textContent = user.email;
+        applyAuth(user);
+        closeLogin();
       }
       function finishTest() {
         const values = Object.values(selectedAnswers);
@@ -422,9 +527,14 @@
         const profile = Object.entries(score).sort((a, b) => b[1] - a[1])[0][0];
         const result = profile === 'safety' ? 'Специалист по промышленной безопасности' : profile === 'engineer' ? 'Инженер-технолог' : 'Инженер по автоматизации процессов';
         document.getElementById('careerResult').textContent = result + ': направление подобрано по ответам теста.';
-        switchTab('passport');
+        if (currentUser) switchTab('passport');
+        else openLogin();
       }
       function book(index) {
+        if (!currentUser) {
+          openLogin();
+          return;
+        }
         const item = excursions[index];
         lastBooking = item;
         document.getElementById('bookingResult').textContent = `Запись подтверждена: ${item[1]}, ${item[2]}. ${item[4]} Требования ТБ: закрытая обувь и сопровождение инженера. После экскурсии вернитесь в приложение, откройте Яндекс-анкету и сохраните впечатления.`;
