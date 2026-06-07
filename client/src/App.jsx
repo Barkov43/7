@@ -335,9 +335,9 @@ export default function App() {
           </div>
           <div className="hidden items-center gap-1 xl:flex">
             <button type="button" onClick={() => setActiveTab('platform')} className="focus-ring rounded-lg bg-[#eef3ff] px-4 py-3 text-sm font-bold text-[#2858d6]">Главная</button>
-            <span className="px-3 py-3 text-sm font-semibold text-[#596274]">О платформе</span>
-            <span className="px-3 py-3 text-sm font-semibold text-[#596274]">Вакансии</span>
-            <span className="px-3 py-3 text-sm font-semibold text-[#596274]">Контакты</span>
+            <button type="button" onClick={() => setActiveTab('enterprises')} className="focus-ring rounded-lg px-3 py-3 text-sm font-semibold text-[#596274]">Предприятия</button>
+            <button type="button" onClick={() => setActiveTab('schedule')} className="focus-ring rounded-lg px-3 py-3 text-sm font-semibold text-[#596274]">Расписание</button>
+            <button type="button" onClick={() => setActiveTab('news')} className="focus-ring rounded-lg px-3 py-3 text-sm font-semibold text-[#596274]">Новости</button>
           </div>
           <div className="flex items-center gap-2">
             <IconButton aria-label="Уведомления" title="Уведомления">
@@ -454,7 +454,7 @@ export default function App() {
 
           {activeTab === 'enterprises' && (
             <section className="grid gap-4">
-              <SectionTitle title="Предприятия" text={`${enterprises.length} предприятий загружено из базы «Предприятия 2025». Используйте поиск и фильтры по отрасли и городу.`} />
+              <SectionTitle title="Предприятия" />
               <div className="grid gap-3 rounded-lg border border-line bg-white p-4 md:grid-cols-[1fr_260px_220px]">
                 <TextInput value={enterpriseQuery} onChange={(event) => setEnterpriseQuery(event.target.value)} placeholder="Название, город или описание" />
                 <select className="focus-ring h-11 rounded-lg border border-line bg-white px-3 text-sm" value={industryFilter} onChange={(event) => setIndustryFilter(event.target.value)}>
@@ -493,14 +493,14 @@ export default function App() {
 
           {activeTab === 'news' && (
             <section className="grid gap-4">
-              <SectionTitle title="Новости предприятий" text="Сгенерированная демо-лента показывает, как предприятия могут публиковать обновления, а туристы — выбирать актуальные экскурсии." />
+              <SectionTitle title="Новости предприятий" />
               <NewsList news={news} variant="full" />
             </section>
           )}
 
           {activeTab === 'schedule' && (
             <section className="grid gap-4">
-              <SectionTitle title="Расписание экскурсий" text="Экскурсии на ближайшие три месяца. После теста можно оставить только подходящие направления." />
+              <SectionTitle title="Расписание экскурсий" />
               <div className="flex flex-wrap gap-2">
                 {[
                   ['all', 'Все экскурсии'],
@@ -544,7 +544,7 @@ export default function App() {
 
           {activeTab === 'test' && (
             <section className="grid gap-4">
-              <SectionTitle title="Профориентационный тест" text="12 вопросов из предоставленного теста. Можно двигаться назад и менять ответы." />
+              <SectionTitle title="Профориентационный тест" />
               <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
                 <div className="grid gap-4">
                   <div className="h-2 overflow-hidden rounded bg-[#e2e7f0]">
@@ -596,7 +596,7 @@ export default function App() {
 
           {activeTab === 'passport' && user && (
             <section className="grid gap-4">
-              <SectionTitle title="Мой цифровой паспорт" text="Здесь собираются профиль, результат теста, записи на экскурсии и сохранённые впечатления." />
+              <SectionTitle title="Мой цифровой паспорт" />
               <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
                 <div className="rounded-lg border border-line bg-white p-4">
                   <div className="grid h-20 w-20 place-items-center rounded-lg bg-[#e7f2ef] text-teal">
@@ -705,10 +705,7 @@ export default function App() {
 
           {activeTab === 'feedback' && (
             <section className="grid gap-4">
-              <SectionTitle
-                title="Обратная связь после экскурсии"
-                text="После записи туристу нужно напомнить вернуться в веб-приложение, оценить прошедшую экскурсию, перейти к анкете в Яндексе и зафиксировать впечатления."
-              />
+              <SectionTitle title="Обратная связь после экскурсии" />
               <div className="grid gap-4 xl:grid-cols-[1fr_340px]">
                 <form className="rounded-lg border border-line bg-white p-4" onSubmit={submitFeedback}>
                   <div className="rounded-lg bg-paper p-4">
@@ -868,7 +865,7 @@ function SectionTitle({ title, text }) {
   return (
     <div className="max-w-3xl">
       <h2 className="text-2xl font-bold sm:text-3xl">{title}</h2>
-      <p className="mt-2 text-sm leading-6 text-[#53615a]">{text}</p>
+      {text && <p className="mt-2 text-sm leading-6 text-[#53615a]">{text}</p>}
     </div>
   );
 }
