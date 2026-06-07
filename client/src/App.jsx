@@ -410,9 +410,6 @@ export default function App() {
                       {isLocked ? <LockKeyhole size={18} /> : <Icon size={18} />}
                       <span>{tab.label}</span>
                     </span>
-                    {tab.keyModule && !isActive && (
-                      <span className="rounded border border-[#9db5f7] bg-white px-1.5 py-0.5 text-[10px] font-black uppercase text-[#2858d6]">Модуль</span>
-                    )}
                   </button>
                 );
               })}

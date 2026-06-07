@@ -93,21 +93,12 @@
         background: var(--blue-soft);
         color: var(--blue);
       }
-      .nav button.key-module:not(.active)::after {
-        content: "Модуль";
-        border: 1px solid #9db5f7;
-        border-radius: 4px;
-        background: #fff;
-        padding: 2px 5px;
-        font-size: 9px;
-        font-weight: 900;
-        text-transform: uppercase;
-      }
       .nav button.locked {
         cursor: not-allowed;
         background: #f4f5f7;
         color: #9aa1ad;
       }
+      .nav button.hidden { display: none; }
       main { padding: 24px; }
       .hero {
         display: flex;
