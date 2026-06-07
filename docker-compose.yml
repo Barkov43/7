@@ -2,7 +2,7 @@ services:
   app:
     build: .
     ports:
-      - "8080:4000"
+      - "37626:4000"
     env_file:
       - ./server/.env
     volumes:
