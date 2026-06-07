@@ -1,70 +1,76 @@
+import fs from 'node:fs';
 import { dbGet, dbRun } from './db.js';
 
-const enterprises = [
-  {
-    title: 'Вятский машиностроительный завод',
-    city: 'Киров',
-    address: 'ул. Производственная, 14',
-    industry: 'Машиностроение',
-    description: 'Производственная площадка с маршрутом по сборочному цеху, участку контроля качества и учебной лаборатории.',
-    safety_note: 'Нужны закрытая обувь, каска и сопровождение инженера. В цехе запрещена самостоятельная фотосъёмка.',
-    image_url: '/assets/hero-industrial-new.png'
-  },
-  {
-    title: 'Кировский биохимический кластер',
-    city: 'Кирово-Чепецк',
-    address: 'пр-т Индустриальный, 8',
-    industry: 'Химия и лабораторная диагностика',
-    description: 'Экскурсия показывает путь продукта от лабораторного анализа до безопасной упаковки партии.',
-    safety_note: 'Перед входом проводится инструктаж, выдаются очки и халат. Доступ к реактивам закрыт.',
-    image_url: '/assets/hero-industrial-new.png'
-  },
-  {
-    title: 'ЛесТех Инжиниринг',
-    city: 'Слободской',
-    address: 'ул. Северная, 22',
-    industry: 'Деревообработка и автоматизация',
-    description: 'Маршрут про цифровое управление линиями деревообработки и работу операторов ЧПУ.',
-    safety_note: 'Посетители идут только по разметке, длинные волосы должны быть убраны, украшения сняты.',
-    image_url: '/assets/hero-industrial-new.png'
-  }
+const enterpriseData = JSON.parse(
+  fs.readFileSync(new URL('./enterprises-2025.json', import.meta.url), 'utf8')
+);
+
+const scheduleDates = [
+  '2026-06-12T10:00:00', '2026-06-16T12:00:00', '2026-06-19T11:00:00',
+  '2026-06-24T14:00:00', '2026-06-27T10:30:00', '2026-07-02T12:30:00',
+  '2026-07-07T10:00:00', '2026-07-11T13:00:00', '2026-07-16T11:30:00',
+  '2026-07-22T10:00:00', '2026-08-04T12:00:00', '2026-08-13T11:00:00'
 ];
 
-const excursions = [
-  ['Инженерный маршрут: от чертежа до детали', 1, '2026-06-18T10:30:00', 90, 20, 7, 'Встреча у проходной N2. Возьмите паспорт или студенческий билет.', 'Сборочный участок -> зона контроля -> учебная лаборатория'],
-  ['Химия без мифов: безопасная лаборатория', 2, '2026-06-20T12:00:00', 80, 16, 10, 'Сбор группы у центральной проходной. Опоздание более 10 минут не допускается.', 'Инструктаж -> демонстрационная лаборатория -> упаковочный участок'],
-  ['Автоматизация деревообработки', 3, '2026-06-24T11:00:00', 75, 18, 5, 'Вход со стороны учебного корпуса, ориентир — синяя навигационная стойка.', 'Пульт оператора -> линия раскроя -> участок ЧПУ'],
-  ['Промышленная безопасность для первокурсников', 1, '2026-06-27T14:00:00', 60, 25, 12, 'Перед экскурсией откроется короткий чек-лист по ТБ в личном паспорте.', 'Вводный класс -> безопасная галерея -> разбор опасных зон']
-];
-
-const news = [
-  [1, 'Завод открыл учебный участок для школьников', 'На площадке появились стенды по мехатронике, промышленной робототехнике и контролю качества.', '2026-06-01'],
-  [2, 'Лаборатория обновила демонстрационный маршрут', 'В экскурсию добавлен блок про экологический контроль и цифровые журналы наблюдений.', '2026-05-28'],
-  [3, 'Студенты протестировали маршрут ЧПУ', 'Первые группы прошли маршрут и отметили понятную навигацию по рабочим зонам.', '2026-05-22'],
-  [1, 'На экскурсии добавили станцию по контролю качества', 'Участники смогут увидеть, как инженеры проверяют точность деталей и заносят результаты в цифровой журнал.', '2026-06-04'],
-  [2, 'Предприятие подготовило безопасный маршрут для школьных групп', 'Команда проекта обновила инструктаж, точки остановок и подсказки для сопровождающих преподавателей.', '2026-06-03'],
-  [3, 'На линии ЧПУ появится демонстрация цифрового паспорта процесса', 'В новой версии экскурсии туристы увидят, какие данные собирает оборудование и как оператор принимает решения.', '2026-06-02']
-];
+function profileForIndustry(industry = '') {
+  const value = industry.toLowerCase();
+  if (/сувенир|художе|одеж|обув|мех|мебел|лес|дерев/.test(value)) return 'creative';
+  if (/хим|фарма|молоч|пищ|кондитер|напит|биотех|медиц/.test(value)) return 'science';
+  return 'technical';
+}
 
 export async function seedDemoData() {
   const existing = await dbGet('SELECT COUNT(*) as count FROM enterprises');
   if (existing.count > 0) return;
 
-  for (const item of enterprises) {
+  for (const item of enterpriseData) {
+    const safetyNote = item.restrictions.length
+      ? item.restrictions.slice(0, 3).join('; ')
+      : 'Перед посещением проводится обязательный инструктаж.';
     await dbRun(
-      'INSERT INTO enterprises (title, city, address, industry, description, safety_note, image_url) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [item.title, item.city, item.address, item.industry, item.description, item.safety_note, item.image_url]
+      `INSERT INTO enterprises (
+        title, city, address, industry, description, safety_note, image_url,
+        website, excursion_title, excursion_address, excursion_description,
+        audiences, price, profile
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        item.title, item.city, item.address, item.industry, item.description, safetyNote, item.image_url,
+        item.website, item.excursion_title, item.excursion_address, item.excursion_description,
+        JSON.stringify(item.audiences), item.price, profileForIndustry(item.industry)
+      ]
     );
   }
 
-  for (const item of excursions) {
+  for (let index = 0; index < Math.min(12, enterpriseData.length); index += 1) {
+    const item = enterpriseData[index];
+    const seatsTotal = Math.max(item.capacity, 10);
+    const seatsTaken = index === 8 ? seatsTotal : Math.min(4 + index, seatsTotal - 1);
     await dbRun(
-      'INSERT INTO excursions (title, enterprise_id, starts_at, duration_minutes, seats_total, seats_taken, guide_comment, route_summary) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      item
+      `INSERT INTO excursions (
+        title, enterprise_id, starts_at, duration_minutes, seats_total, seats_taken,
+        guide_comment, route_summary, age_restriction, price, profile
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        item.excursion_title, index + 1, scheduleDates[index], item.duration_minutes, seatsTotal, seatsTaken,
+        `Сбор группы по адресу: ${item.excursion_address || item.address}.`,
+        item.excursion_description,
+        item.audiences.join(', ') || 'Школьники 9-11 классов и студенты',
+        item.price,
+        profileForIndustry(item.industry)
+      ]
     );
   }
 
-  for (const item of news) {
-    await dbRun('INSERT INTO news (enterprise_id, title, body, published_at) VALUES (?, ?, ?, ?)', item);
+  for (let index = 0; index < 6; index += 1) {
+    const item = enterpriseData[index];
+    await dbRun(
+      'INSERT INTO news (enterprise_id, title, body, published_at) VALUES (?, ?, ?, ?)',
+      [
+        index + 1,
+        index % 2 === 0 ? 'Предприятие обновило профориентационный маршрут' : 'Открыта запись для школьных и студенческих групп',
+        item.excursion_description,
+        `2026-06-0${Math.max(1, 6 - index)}`
+      ]
+    );
   }
 }

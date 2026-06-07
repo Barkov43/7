@@ -22,26 +22,32 @@ function validateRequired(body, fields) {
 }
 
 function mapCareerResult(answers) {
-  const scores = { engineer: 0, safety: 0, automation: 0 };
+  const scores = { technical: 0, creative: 0, science: 0 };
   for (const answer of answers || []) {
     scores[answer] = (scores[answer] || 0) + 1;
   }
   const profile = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
   const variants = {
-    engineer: {
-      specialty: 'Инженер-технолог',
-      explanation: 'Вам ближе работа с производственным процессом, материалами и качеством изделия.'
+    technical: {
+      specialty: 'Инженер-конструктор / оператор промышленного оборудования',
+      backup_specialty: 'Специалист по техническому контролю',
+      explanation: 'Вам подходят машиностроение, металлургия, домостроение и технические производства.',
+      excursion_profile: 'technical'
     },
-    safety: {
-      specialty: 'Специалист по промышленной безопасности',
-      explanation: 'Ответы показывают интерес к правилам, рискам, маршрутам и безопасной организации посещений.'
+    creative: {
+      specialty: 'Дизайнер-предметник / мастер художественного производства',
+      backup_specialty: 'Технолог лёгкой промышленности',
+      explanation: 'Вам близки художественные промыслы, производство одежды, мебели и изделий из дерева.',
+      excursion_profile: 'creative'
     },
-    automation: {
-      specialty: 'Инженер по автоматизации процессов',
-      explanation: 'Вам подходит направление с датчиками, контроллерами, цифровыми линиями и анализом данных.'
+    science: {
+      specialty: 'Технолог химического или пищевого производства',
+      backup_specialty: 'Лаборант химического анализа',
+      explanation: 'Вам подходят химическая, фармацевтическая и пищевая промышленность.',
+      excursion_profile: 'science'
     }
   };
-  return { score_profile: profile, ...variants[profile] };
+  return { score_profile: profile, scores, ...variants[profile] };
 }
 
 router.get('/health', (_request, response) => {
@@ -54,16 +60,16 @@ router.get('/platform', (_request, response) => {
     platform: 'Демо-оболочка: Госуслуги / Сферум / региональный портал',
     status: 'Демонстрационная версия цифрового паспорта промышленного туриста.',
     metrics: [
-      { label: 'Подготовлено экскурсий', value: '10 за месяц' },
+      { label: 'Предприятия в базе', value: '51' },
       { label: 'Целевая аудитория', value: '9-11 классы и студенты' },
-      { label: 'Выбор промышленных специальностей', value: '5-7%' }
+      { label: 'Цель MVP', value: '30 записей в месяц' }
     ]
   });
 });
 
 router.get('/enterprises', asyncHandler(async (_request, response) => {
   const rows = await dbAll('SELECT * FROM enterprises ORDER BY id');
-  response.json(rows);
+  response.json(rows.map((row) => ({ ...row, audiences: JSON.parse(row.audiences || '[]') })));
 }));
 
 router.get('/excursions', asyncHandler(async (_request, response) => {
@@ -128,6 +134,31 @@ router.post('/bookings', asyncHandler(async (request, response) => {
     error.status = 409;
     throw error;
   }
+  if (new Date(excursion.starts_at).getTime() - Date.now() < 2 * 60 * 60 * 1000) {
+    const error = new Error('Запись закрывается за 2 часа до начала экскурсии');
+    error.status = 409;
+    throw error;
+  }
+  if (request.body.user_id) {
+    const active = await dbAll(`
+      SELECT excursions.starts_at, excursions.duration_minutes
+      FROM bookings
+      JOIN excursions ON excursions.id = bookings.excursion_id
+      WHERE bookings.user_id = ? AND bookings.status IN ('pending', 'confirmed')
+    `, [request.body.user_id]);
+    const targetStart = new Date(excursion.starts_at).getTime();
+    const targetEnd = targetStart + excursion.duration_minutes * 60 * 1000;
+    const overlaps = active.some((item) => {
+      const start = new Date(item.starts_at).getTime();
+      const end = start + item.duration_minutes * 60 * 1000;
+      return targetStart < end && targetEnd > start;
+    });
+    if (overlaps) {
+      const error = new Error('Вы уже записаны на другую экскурсию в это время');
+      error.status = 409;
+      throw error;
+    }
+  }
 
   const booking = await dbRun(
     'INSERT INTO bookings (user_id, excursion_id, visitor_name, email, phone) VALUES (?, ?, ?, ?, ?)',
@@ -155,6 +186,28 @@ router.get('/bookings', asyncHandler(async (_request, response) => {
     ORDER BY bookings.created_at DESC
   `);
   response.json(rows);
+}));
+
+router.delete('/bookings/:id', asyncHandler(async (request, response) => {
+  const booking = await dbGet(`
+    SELECT bookings.*, excursions.starts_at
+    FROM bookings
+    JOIN excursions ON excursions.id = bookings.excursion_id
+    WHERE bookings.id = ?
+  `, [request.params.id]);
+  if (!booking) {
+    const error = new Error('Запись не найдена');
+    error.status = 404;
+    throw error;
+  }
+  if (new Date(booking.starts_at).getTime() - Date.now() < 24 * 60 * 60 * 1000) {
+    const error = new Error('Отмена доступна не позднее чем за 24 часа до экскурсии');
+    error.status = 409;
+    throw error;
+  }
+  await dbRun("UPDATE bookings SET status = 'cancelled_by_user' WHERE id = ?", [booking.id]);
+  await dbRun('UPDATE excursions SET seats_taken = MAX(seats_taken - 1, 0) WHERE id = ?', [booking.excursion_id]);
+  response.json({ id: booking.id, status: 'cancelled_by_user' });
 }));
 
 router.post('/feedback', asyncHandler(async (request, response) => {

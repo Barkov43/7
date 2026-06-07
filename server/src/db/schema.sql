@@ -18,7 +18,14 @@ CREATE TABLE IF NOT EXISTS enterprises (
   industry TEXT NOT NULL,
   description TEXT NOT NULL,
   safety_note TEXT NOT NULL,
-  image_url TEXT NOT NULL
+  image_url TEXT NOT NULL,
+  website TEXT NOT NULL DEFAULT '',
+  excursion_title TEXT NOT NULL DEFAULT '',
+  excursion_address TEXT NOT NULL DEFAULT '',
+  excursion_description TEXT NOT NULL DEFAULT '',
+  audiences TEXT NOT NULL DEFAULT '[]',
+  price TEXT NOT NULL DEFAULT '',
+  profile TEXT NOT NULL DEFAULT 'technical'
 );
 
 CREATE TABLE IF NOT EXISTS excursions (
@@ -31,6 +38,9 @@ CREATE TABLE IF NOT EXISTS excursions (
   seats_taken INTEGER NOT NULL DEFAULT 0,
   guide_comment TEXT NOT NULL,
   route_summary TEXT NOT NULL,
+  age_restriction TEXT NOT NULL DEFAULT '',
+  price TEXT NOT NULL DEFAULT '',
+  profile TEXT NOT NULL DEFAULT 'technical',
   FOREIGN KEY (enterprise_id) REFERENCES enterprises(id)
 );
 

@@ -24,7 +24,8 @@ import {
   mockEnterprises,
   mockExcursions,
   mockNews,
-  mockPlatform
+  mockPlatform,
+  testQuestions
 } from './api_mock.js';
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
@@ -41,99 +42,6 @@ const tabs = [
   { id: 'admin', label: 'Админка', icon: ShieldCheck, adminOnly: true }
 ];
 
-const testQuestions = [
-  {
-    id: 'workstyle',
-    title: 'Что вам интереснее на экскурсии?',
-    options: [
-      { id: 'engineer', label: 'Как создаётся изделие' },
-      { id: 'automation', label: 'Как работают цифровые линии' },
-      { id: 'safety', label: 'Как устроена безопасность' }
-    ]
-  },
-  {
-    id: 'task',
-    title: 'Какую задачу вы бы выбрали в проектной команде?',
-    options: [
-      { id: 'automation', label: 'Настроить датчики и мониторинг' },
-      { id: 'safety', label: 'Найти опасные зоны маршрута' },
-      { id: 'engineer', label: 'Разобрать технологическую карту' }
-    ]
-  },
-  {
-    id: 'result',
-    title: 'Какой результат кажется самым полезным?',
-    options: [
-      { id: 'safety', label: 'Понятный чек-лист ТБ' },
-      { id: 'engineer', label: 'Маршрут от сырья до продукта' },
-      { id: 'automation', label: 'Паспорт цифрового процесса' }
-    ]
-  },
-  {
-    id: 'environment',
-    title: 'В какой среде вам комфортнее работать?',
-    options: [
-      { id: 'engineer', label: 'В цехе рядом с оборудованием' },
-      { id: 'automation', label: 'За пультом, схемой или экраном мониторинга' },
-      { id: 'safety', label: 'На маршруте, где нужно видеть риски' }
-    ]
-  },
-  {
-    id: 'tools',
-    title: 'Какие инструменты кажутся вам ближе?',
-    options: [
-      { id: 'automation', label: 'Датчики, контроллеры и панели управления' },
-      { id: 'engineer', label: 'Чертежи, карты процессов и измерения' },
-      { id: 'safety', label: 'Инструктажи, чек-листы и знаки безопасности' }
-    ]
-  },
-  {
-    id: 'decision',
-    title: 'Что вы сначала проверите перед запуском экскурсии?',
-    options: [
-      { id: 'safety', label: 'Безопасность маршрута и опасные зоны' },
-      { id: 'engineer', label: 'Логику технологической цепочки' },
-      { id: 'automation', label: 'Работу цифровой навигации и уведомлений' }
-    ]
-  },
-  {
-    id: 'interest',
-    title: 'Какая новость предприятия заинтересует вас сильнее?',
-    options: [
-      { id: 'engineer', label: 'Запущена новая производственная линия' },
-      { id: 'automation', label: 'Внедрён цифровой двойник участка' },
-      { id: 'safety', label: 'Обновлены правила безопасного посещения' }
-    ]
-  },
-  {
-    id: 'document',
-    title: 'Какой документ вы бы хотели собрать после экскурсии?',
-    options: [
-      { id: 'safety', label: 'Карту опасных зон и требований ТБ' },
-      { id: 'engineer', label: 'Описание производственного маршрута' },
-      { id: 'automation', label: 'Схему данных и автоматизированных операций' }
-    ]
-  },
-  {
-    id: 'teamrole',
-    title: 'Какая роль в команде вам ближе?',
-    options: [
-      { id: 'automation', label: 'Настроить цифровой модуль и интеграцию' },
-      { id: 'safety', label: 'Проверить маршрут со специалистом по охране труда' },
-      { id: 'engineer', label: 'Объяснить, как работает производство' }
-    ]
-  },
-  {
-    id: 'feedback',
-    title: 'Что важно спросить у туриста после посещения?',
-    options: [
-      { id: 'engineer', label: 'Какая технология стала понятнее' },
-      { id: 'safety', label: 'Где было сложно ориентироваться безопасно' },
-      { id: 'automation', label: 'Какие цифровые подсказки помогли' }
-    ]
-  }
-];
-
 function formatDate(value) {
   return new Intl.DateTimeFormat('ru-RU', {
     day: 'numeric',
@@ -141,6 +49,16 @@ function formatDate(value) {
     hour: '2-digit',
     minute: '2-digit'
   }).format(new Date(value));
+}
+
+function summarize(value = '', limit = 360) {
+  return value.length > limit ? `${value.slice(0, limit).trim()}...` : value;
+}
+
+function websiteUrl(value = '') {
+  const website = value.trim();
+  if (!website || website === '-' || !website.includes('.')) return '';
+  return website.startsWith('http') ? website : `https://${website}`;
 }
 
 async function getJson(path) {
@@ -155,6 +73,12 @@ async function postJson(path, payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
+  if (!response.ok) throw new Error(`API ${path}: ${response.status}`);
+  return response.json();
+}
+
+async function deleteJson(path) {
+  const response = await fetch(`${API_BASE}${path}`, { method: 'DELETE' });
   if (!response.ok) throw new Error(`API ${path}: ${response.status}`);
   return response.json();
 }
@@ -234,10 +158,16 @@ export default function App() {
   const [bookingTarget, setBookingTarget] = useState(null);
   const [bookingForm, setBookingForm] = useState({ visitor_name: '', email: '', phone: '' });
   const [confirmation, setConfirmation] = useState(null);
+  const [bookings, setBookings] = useState([]);
   const [answers, setAnswers] = useState({});
+  const [testStep, setTestStep] = useState(0);
   const [careerResult, setCareerResult] = useState(null);
   const [feedbackForm, setFeedbackForm] = useState({ rating: 0, impressions: '', yandexCompleted: false });
   const [feedbackResult, setFeedbackResult] = useState(null);
+  const [enterpriseQuery, setEnterpriseQuery] = useState('');
+  const [industryFilter, setIndustryFilter] = useState('Все отрасли');
+  const [cityFilter, setCityFilter] = useState('Все города');
+  const [scheduleProfile, setScheduleProfile] = useState('all');
 
   useEffect(() => {
     let mounted = true;
@@ -260,6 +190,21 @@ export default function App() {
   const freeSeats = useMemo(
     () => excursions.reduce((sum, item) => sum + Math.max(item.seats_total - item.seats_taken, 0), 0),
     [excursions]
+  );
+  const industries = useMemo(() => ['Все отрасли', ...new Set(enterprises.map((item) => item.industry).filter(Boolean))], [enterprises]);
+  const cities = useMemo(() => ['Все города', ...new Set(enterprises.map((item) => item.city).filter(Boolean))], [enterprises]);
+  const filteredEnterprises = useMemo(() => {
+    const query = enterpriseQuery.trim().toLowerCase();
+    return enterprises.filter((item) => {
+      const matchesQuery = !query || `${item.title} ${item.description} ${item.city}`.toLowerCase().includes(query);
+      const matchesIndustry = industryFilter === 'Все отрасли' || item.industry === industryFilter;
+      const matchesCity = cityFilter === 'Все города' || item.city === cityFilter;
+      return matchesQuery && matchesIndustry && matchesCity;
+    });
+  }, [cities, enterprises, enterpriseQuery, industryFilter, cityFilter]);
+  const filteredExcursions = useMemo(
+    () => excursions.filter((item) => scheduleProfile === 'all' || item.profile === scheduleProfile),
+    [excursions, scheduleProfile]
   );
 
   function saveUser(nextUser) {
@@ -324,11 +269,11 @@ export default function App() {
   async function submitBooking(event) {
     event.preventDefault();
     const payload = { ...bookingForm, user_id: user?.id, excursion_id: bookingTarget.id };
+    let savedBooking;
     try {
-      const result = await postJson('/bookings', payload);
-      setConfirmation(result);
+      savedBooking = await postJson('/bookings', payload);
     } catch {
-      setConfirmation({
+      savedBooking = {
         id: Date.now(),
         status: 'confirmed',
         enterprise: bookingTarget.enterprise_title,
@@ -336,10 +281,22 @@ export default function App() {
         starts_at: bookingTarget.starts_at,
         guide_comment: bookingTarget.guide_comment,
         safety_note: bookingTarget.safety_note
-      });
+      };
     }
+    setConfirmation(savedBooking);
     setBookingTarget(null);
+    setBookings((current) => [...current, { ...savedBooking, ...payload }]);
     setActiveTab('passport');
+  }
+
+  async function cancelBooking(id) {
+    try {
+      await deleteJson(`/bookings/${id}`);
+    } catch {
+      // Автономный демо-режим сохраняет отмену только в текущей сессии.
+    }
+    setBookings((current) => current.map((item) => (item.id === id ? { ...item, status: 'cancelled_by_user' } : item)));
+    if (confirmation?.id === id) setConfirmation((current) => ({ ...current, status: 'cancelled_by_user' }));
   }
 
   async function submitFeedback(event) {
@@ -500,19 +457,36 @@ export default function App() {
 
           {activeTab === 'enterprises' && (
             <section className="grid gap-4">
-              <SectionTitle title="Предприятия" text="База заполняется командой проекта вручную, а в будущем может перейти в личные кабинеты предприятий." />
+              <SectionTitle title="Предприятия" text={`${enterprises.length} предприятий загружено из базы «Предприятия 2025». Используйте поиск и фильтры по отрасли и городу.`} />
+              <div className="grid gap-3 rounded-lg border border-line bg-white p-4 md:grid-cols-[1fr_260px_220px]">
+                <TextInput value={enterpriseQuery} onChange={(event) => setEnterpriseQuery(event.target.value)} placeholder="Название, город или описание" />
+                <select className="focus-ring h-11 rounded-lg border border-line bg-white px-3 text-sm" value={industryFilter} onChange={(event) => setIndustryFilter(event.target.value)}>
+                  {industries.map((item) => <option key={item}>{item}</option>)}
+                </select>
+                <select className="focus-ring h-11 rounded-lg border border-line bg-white px-3 text-sm" value={cityFilter} onChange={(event) => setCityFilter(event.target.value)}>
+                  {cities.map((item) => <option key={item}>{item}</option>)}
+                </select>
+              </div>
+              <p className="text-sm font-semibold text-[#66736c]">Найдено: {filteredEnterprises.length}</p>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {enterprises.map((enterprise) => (
+                {filteredEnterprises.map((enterprise) => (
                   <article key={enterprise.id} className="overflow-hidden rounded-lg border border-line bg-white shadow-sm transition hover:shadow-soft">
                     <img className="h-44 w-full object-cover" src={enterprise.image_url} alt={enterprise.title} />
                     <div className="p-4">
                       <p className="text-xs font-bold uppercase text-amber">{enterprise.industry}</p>
                       <h3 className="mt-2 text-lg font-bold">{enterprise.title}</h3>
                       <p className="mt-2 text-sm text-[#53615a]">{enterprise.city}, {enterprise.address}</p>
-                      <p className="mt-3 text-sm leading-6">{enterprise.description}</p>
+                      <p className="mt-3 text-sm leading-6">{summarize(enterprise.description)}</p>
+                      <p className="mt-3 text-sm font-semibold">{enterprise.excursion_title}</p>
+                      <p className="mt-1 text-sm text-[#53615a]">{summarize(enterprise.excursion_description, 240)}</p>
                       <div className="mt-4 rounded-lg bg-paper p-3 text-sm text-[#53615a]">
                         <strong className="text-ink">ТБ:</strong> {enterprise.safety_note}
                       </div>
+                      {websiteUrl(enterprise.website) && (
+                        <a className="mt-4 inline-flex text-sm font-bold text-[#2858d6]" href={websiteUrl(enterprise.website)} target="_blank" rel="noreferrer">
+                          Сайт предприятия
+                        </a>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -529,18 +503,32 @@ export default function App() {
 
           {activeTab === 'schedule' && (
             <section className="grid gap-4">
-              <SectionTitle title="Расписание экскурсий" text="Пользователь выбирает слот, записывается и получает подтверждение с деталями входа и безопасности." />
+              <SectionTitle title="Расписание экскурсий" text="Экскурсии на ближайшие три месяца. После теста можно оставить только подходящие направления." />
+              <div className="flex flex-wrap gap-2">
+                {[
+                  ['all', 'Все экскурсии'],
+                  ['technical', 'Технические'],
+                  ['creative', 'Творческие'],
+                  ['science', 'Научно-производственные']
+                ].map(([value, label]) => (
+                  <button key={value} type="button" onClick={() => setScheduleProfile(value)} className={`focus-ring h-10 rounded-lg border px-3 text-sm font-bold ${scheduleProfile === value ? 'border-[#2858d6] bg-[#2858d6] text-white' : 'border-line bg-white text-ink'}`}>
+                    {label}
+                  </button>
+                ))}
+              </div>
               <div className="grid gap-3">
-                {excursions.map((excursion) => (
+                {filteredExcursions.map((excursion) => (
                   <article key={excursion.id} className="grid gap-3 rounded-lg border border-line bg-white p-4 md:grid-cols-[1fr_auto] md:items-center">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-lg bg-[#e7f2ef] px-2 py-1 text-xs font-bold text-teal">{formatDate(excursion.starts_at)}</span>
                         <span className="rounded-lg bg-[#fff3d8] px-2 py-1 text-xs font-bold text-[#8b5b00]">{excursion.duration_minutes} минут</span>
+                        <span className="rounded-lg bg-[#eef3ff] px-2 py-1 text-xs font-bold text-[#2858d6]">{excursion.age_restriction}</span>
                       </div>
                       <h3 className="mt-3 text-lg font-bold">{excursion.title}</h3>
                       <p className="mt-1 text-sm text-[#53615a]">{excursion.enterprise_title}, {excursion.address}</p>
                       <p className="mt-3 text-sm">{excursion.route_summary}</p>
+                      <p className="mt-2 text-sm text-[#53615a]"><strong>Стоимость:</strong> {excursion.price}</p>
                     </div>
                     <div className="grid gap-2 md:min-w-[190px]">
                       <p className="text-sm font-semibold text-[#53615a]">
@@ -548,7 +536,7 @@ export default function App() {
                       </p>
                       <PrimaryButton disabled={excursion.seats_taken >= excursion.seats_total} onClick={() => openBooking(excursion)}>
                         <BadgeCheck size={18} />
-                        Записаться
+                        {excursion.seats_taken >= excursion.seats_total ? 'Мест нет' : 'Записаться'}
                       </PrimaryButton>
                     </div>
                   </article>
@@ -559,12 +547,15 @@ export default function App() {
 
           {activeTab === 'test' && (
             <section className="grid gap-4">
-              <SectionTitle title="Профориентационный тест" text="Короткий сценарий после регистрации. Результат сохраняется в цифровом паспорте." />
+              <SectionTitle title="Профориентационный тест" text="12 вопросов из предоставленного теста. Можно двигаться назад и менять ответы." />
               <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
                 <div className="grid gap-4">
-                  {testQuestions.map((question, index) => (
-                    <fieldset key={question.id} className="rounded-lg border border-line bg-white p-4">
-                      <legend className="px-1 text-base font-bold">{index + 1}. {question.title}</legend>
+                  <div className="h-2 overflow-hidden rounded bg-[#e2e7f0]">
+                    <div className="h-full bg-[#2858d6] transition-all" style={{ width: `${((testStep + 1) / testQuestions.length) * 100}%` }} />
+                  </div>
+                  {[testQuestions[testStep]].map((question) => (
+                    <fieldset key={question.id} className="rounded-lg border border-line bg-white p-5">
+                      <legend className="px-1 text-base font-bold">{testStep + 1} из {testQuestions.length}. {question.title}</legend>
                       <div className="mt-4 grid gap-2 md:grid-cols-3">
                         {question.options.map((option) => {
                           const selected = answers[question.id] === option.id;
@@ -584,16 +575,22 @@ export default function App() {
                       </div>
                     </fieldset>
                   ))}
-                  <PrimaryButton className="w-fit" disabled={Object.keys(answers).length !== testQuestions.length} onClick={submitCareerTest}>
-                    <ClipboardCheck size={18} />
-                    Получить рекомендацию
-                  </PrimaryButton>
+                  <div className="flex flex-wrap justify-between gap-3">
+                    <IconButton disabled={testStep === 0} onClick={() => setTestStep((step) => Math.max(0, step - 1))}>Назад</IconButton>
+                    {testStep < testQuestions.length - 1 ? (
+                      <PrimaryButton disabled={!answers[testQuestions[testStep].id]} onClick={() => setTestStep((step) => step + 1)}>Следующий вопрос</PrimaryButton>
+                    ) : (
+                      <PrimaryButton disabled={Object.keys(answers).length !== testQuestions.length} onClick={submitCareerTest}>
+                        <ClipboardCheck size={18} />
+                        Получить рекомендацию
+                      </PrimaryButton>
+                    )}
+                  </div>
                 </div>
                 <aside className="rounded-lg border border-line bg-white p-4">
                   <p className="text-xs font-bold uppercase text-teal">Как это работает</p>
                   <p className="mt-3 text-sm leading-6 text-[#53615a]">
-                    MVP не делает сложную психометрику. Он показывает понятный сценарий: ответы превращаются в направление,
-                    которое можно связать с предприятиями и экскурсиями.
+                    Система считает ответы трёх типов, показывает основное и запасное направление, а затем фильтрует подходящие экскурсии.
                   </p>
                 </aside>
               </div>
@@ -628,10 +625,40 @@ export default function App() {
                       <div className="rounded-lg border border-line bg-white p-4">
                         <p className="text-xs font-bold uppercase text-amber">{careerResult.score_profile}</p>
                         <h3 className="mt-2 text-xl font-bold">{careerResult.specialty}</h3>
+                        {careerResult.backup_specialty && <p className="mt-2 text-sm font-semibold">Запасное направление: {careerResult.backup_specialty}</p>}
                         <p className="mt-2 text-sm leading-6 text-[#53615a]">{careerResult.explanation}</p>
+                        <PrimaryButton className="mt-4" onClick={() => {
+                          setScheduleProfile(careerResult.excursion_profile || careerResult.score_profile);
+                          setActiveTab('schedule');
+                        }}>
+                          Смотреть подходящие экскурсии
+                        </PrimaryButton>
                       </div>
                     )}
                   </StatusPanel>
+                  <StatusPanel title="Мои активные записи" emptyText="Вы ещё не записались на экскурсию.">
+                    {bookings.length > 0 && (
+                      <div className="grid gap-3">
+                        {bookings.map((booking) => (
+                          <div key={booking.id} className="rounded-lg border border-line bg-white p-4">
+                            <p className="text-xs font-bold uppercase text-[#2858d6]">{booking.status === 'cancelled_by_user' ? 'Отменена пользователем' : 'Подтверждена'}</p>
+                            <h3 className="mt-2 font-bold">{booking.enterprise}</h3>
+                            <p className="mt-1 text-sm text-[#53615a]">{formatDate(booking.starts_at)}</p>
+                            {booking.status !== 'cancelled_by_user' && (
+                              <button type="button" onClick={() => cancelBooking(booking.id)} className="mt-3 text-sm font-bold text-[#b95642]">Отменить запись</button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </StatusPanel>
+                  <section>
+                    <h2 className="mb-3 text-xl font-bold">Достижения</h2>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-lg border border-[#b9caff] bg-[#f3f6ff] p-4"><strong>Первый шаг</strong><p className="mt-1 text-sm text-[#53615a]">Профиль создан в ПромНавигаторе.</p></div>
+                      {careerResult && <div className="rounded-lg border border-[#f2d28f] bg-[#fff8e9] p-4"><strong>Профессия найдена</strong><p className="mt-1 text-sm text-[#53615a]">Пройден профориентационный тест.</p></div>}
+                    </div>
+                  </section>
                   <StatusPanel title="Подтверждение записи" emptyText="После записи здесь появятся адрес, дата, время и комментарий предприятия.">
                     {confirmation && (
                       <div className="rounded-lg border border-teal bg-[#f3fbf9] p-4">
