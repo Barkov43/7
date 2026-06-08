@@ -8,10 +8,10 @@
     "dev:client": "npm run dev --prefix client",
     "dev:server": "npm run dev --prefix server",
     "build": "npm run build --prefix client",
+    "build:standalone": "npm run build --prefix client && node scripts/build-standalone.mjs",
     "start": "npm start --prefix server"
   },
   "engines": {
     "node": ">=20"
   }
 }
-

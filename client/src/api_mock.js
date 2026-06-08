@@ -2,7 +2,7 @@ import enterpriseData from './enterprises-2025.json';
 
 export const mockPlatform = {
   title: 'Цифровой паспорт промышленного туриста',
-  platform: 'ПромНавигатор',
+  platform: 'Цифровой паспорт промышленного туриста',
   status: 'Расширенная демонстрационная версия по техническому заданию команды 7.',
   metrics: [
     { label: 'Предприятия в базе', value: '51' },
@@ -20,6 +20,7 @@ function profileForIndustry(industry = '') {
 
 export const mockEnterprises = enterpriseData.map((item) => ({
   ...item,
+  image_url: '/assets/hero-industrial-new.png',
   profile: profileForIndustry(item.industry),
   safety_note: item.restrictions.length
     ? item.restrictions.slice(0, 3).join('; ')

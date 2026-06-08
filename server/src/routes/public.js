@@ -56,8 +56,8 @@ router.get('/health', (_request, response) => {
 
 router.get('/platform', (_request, response) => {
   response.json({
-    title: 'Модуль для региональной образовательной платформы',
-    platform: 'Демо-оболочка: Госуслуги / Сферум / региональный портал',
+    title: 'Цифровой паспорт промышленного туриста',
+    platform: 'Цифровой паспорт промышленного туриста',
     status: 'Демонстрационная версия цифрового паспорта промышленного туриста.',
     metrics: [
       { label: 'Предприятия в базе', value: '51' },
@@ -98,7 +98,14 @@ router.post('/auth/register', asyncHandler(async (request, response) => {
     'INSERT INTO users (full_name, email, phone, password_hash) VALUES (?, ?, ?, ?)',
     [request.body.full_name, request.body.email, request.body.phone, hashPassword(request.body.password)]
   );
-  response.status(201).json({ id: result.id, full_name: request.body.full_name, email: request.body.email, phone: request.body.phone });
+  response.status(201).json({
+    id: result.id,
+    full_name: request.body.full_name,
+    email: request.body.email,
+    phone: request.body.phone,
+    class_name: request.body.class_name || '9Б',
+    school: request.body.school || 'МБОУ Лицей № 21, г. Киров'
+  });
 }));
 
 router.post('/profile/photo', upload.single('photo'), asyncHandler(async (request, response) => {

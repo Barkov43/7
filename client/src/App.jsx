@@ -1,9 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  Activity,
+  Award,
   BadgeCheck,
   Bell,
+  BookOpen,
+  BrainCircuit,
   Building2,
   CalendarDays,
+  CheckCircle2,
+  ChevronRight,
   ClipboardCheck,
   FileText,
   GraduationCap,
@@ -13,9 +19,12 @@ import {
   Menu,
   MessageSquareText,
   Newspaper,
+  School,
   ShieldCheck,
   Sparkles,
   Star,
+  Target,
+  Trophy,
   UserRound,
   X
 } from 'lucide-react';
@@ -30,6 +39,52 @@ import {
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 const YANDEX_FEEDBACK_URL = 'https://forms.yandex.ru/cloud/industrial-tourist-feedback-demo/';
+const demoStudentProfile = {
+  className: '9Б',
+  school: 'МБОУ Лицей № 21, г. Киров',
+  gisUpdated: 'Сегодня, 08:40',
+  skills: [
+    { label: 'Математика', shortLabel: 'Математика', value: 86 },
+    { label: 'Физика', shortLabel: 'Физика', value: 82 },
+    { label: 'Информатика', shortLabel: 'Информатика', value: 91 },
+    { label: 'Русский язык', shortLabel: 'Русский', value: 74 },
+    { label: 'Командная работа', shortLabel: 'Команда', value: 78 },
+    { label: 'Инициативность', shortLabel: 'Инициатива', value: 72 }
+  ],
+  grades: [
+    { subject: 'Математика', value: '5', trend: '+0,3' },
+    { subject: 'Физика', value: '5', trend: '+0,2' },
+    { subject: 'Информатика', value: '5', trend: '+0,4' },
+    { subject: 'Русский язык', value: '4', trend: '+0,1' }
+  ],
+  olympiads: [
+    { title: 'Инженерная олимпиада', level: 'Городской этап', result: 'Призёр' },
+    { title: 'Шаг в будущее', level: 'Школьный этап', result: 'Участник' }
+  ],
+  activities: [
+    { title: 'Робототехника', detail: '2 года, проектный трек' },
+    { title: 'Школьный медиацентр', detail: 'Командная работа' },
+    { title: 'Хакатон «Умный город»', detail: 'Финалист команды' }
+  ],
+  visitedExcursions: [
+    {
+      enterprise: 'АО «ЛЕПСЕ»',
+      date: '18 апреля 2026',
+      rating: 5,
+      knowledge: 'Автоматизация, контроль качества, промышленная безопасность'
+    },
+    {
+      enterprise: 'АО «Кировский машзавод 1 Мая»',
+      date: '12 марта 2026',
+      rating: 4,
+      knowledge: 'Проектирование, металлообработка, работа инженера'
+    }
+  ],
+  testHistory: [
+    { title: 'Инженерный профиль', date: '20 мая 2026', result: 'Автоматизация производств', source: 'Встроенный' },
+    { title: 'Профессиональные интересы', date: '4 марта 2026', result: 'Техника и технологии', source: 'Внешний' }
+  ]
+};
 
 const tabs = [
   { id: 'platform', label: 'Платформа', icon: LayoutDashboard },
@@ -186,7 +241,6 @@ export default function App() {
     };
   }, []);
 
-  const selectedEnterprise = useMemo(() => enterprises[0], [enterprises]);
   const freeSeats = useMemo(
     () => excursions.reduce((sum, item) => sum + Math.max(item.seats_total - item.seats_taken, 0), 0),
     [excursions]
@@ -218,9 +272,16 @@ export default function App() {
     const payload = Object.fromEntries(form.entries());
     try {
       const created = await postJson('/auth/register', payload);
-      saveUser(created);
+      saveUser({ ...payload, ...created });
     } catch {
-      saveUser({ id: Date.now(), full_name: payload.full_name, email: payload.email, phone: payload.phone });
+      saveUser({
+        id: Date.now(),
+        full_name: payload.full_name,
+        email: payload.email,
+        phone: payload.phone,
+        class_name: payload.class_name,
+        school: payload.school
+      });
     }
     setRegisterOpen(false);
   }
@@ -232,10 +293,12 @@ export default function App() {
     const isAdmin = identifier.toLowerCase() === 'admin' || identifier.toLowerCase() === 'admin@demo.ru';
     saveUser({
       id: isAdmin ? 1 : Date.now(),
-      full_name: isAdmin ? 'Администратор' : identifier.split('@')[0] || 'Пользователь',
+      full_name: isAdmin ? 'Администратор' : 'Алексей Смирнов',
       email: identifier.includes('@') ? identifier : `${identifier || 'user'}@demo.ru`,
       phone: '',
-      isAdmin
+      isAdmin,
+      class_name: demoStudentProfile.className,
+      school: demoStudentProfile.school
     });
     setLoginOpen(false);
   }
@@ -326,11 +389,13 @@ export default function App() {
               <Menu size={18} />
             </IconButton>
             <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#2858d6] text-sm font-black text-white">
-              ПН
+              ЦП
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold text-[#192235] sm:text-xl">ПромНавигатор</h1>
-              <p className="truncate text-xs font-medium text-[#7a8496]">Профориентационная платформа</p>
+              <h1 className="max-w-[230px] text-sm font-bold leading-tight text-[#192235] sm:max-w-[330px] sm:text-base">
+                Цифровой паспорт промышленного туриста
+              </h1>
+              <p className="hidden text-xs font-medium text-[#7a8496] sm:block">Профориентационная платформа</p>
             </div>
           </div>
           <div className="hidden items-center gap-1 xl:flex">
@@ -345,7 +410,7 @@ export default function App() {
             </IconButton>
             {user ? (
               <>
-                <IconButton title={user.full_name}>
+                <IconButton title="Открыть личный кабинет" onClick={() => setActiveTab('passport')}>
                   <UserRound size={18} />
                   <span className="hidden sm:inline">{user.full_name.split(' ')[0]}</span>
                 </IconButton>
@@ -595,112 +660,23 @@ export default function App() {
           )}
 
           {activeTab === 'passport' && user && (
-            <section className="grid gap-4">
-              <SectionTitle title="Мой цифровой паспорт" />
-              <div className="grid gap-4 xl:grid-cols-[360px_1fr]">
-                <div className="rounded-lg border border-line bg-white p-4">
-                  <div className="grid h-20 w-20 place-items-center rounded-lg bg-[#e7f2ef] text-teal">
-                    <UserRound size={34} />
-                  </div>
-                  <h3 className="mt-4 text-xl font-bold">{user?.full_name || 'Гость платформы'}</h3>
-                  <p className="mt-1 text-sm text-[#53615a]">{user?.email || 'Зарегистрируйтесь, чтобы сохранить паспорт'}</p>
-                  <div className="mt-4 grid gap-2 text-sm">
-                    <p><strong>Телефон:</strong> {user?.phone || 'не указан'}</p>
-                    <p><strong>Свободных мест:</strong> {freeSeats}</p>
-                    <p><strong>Ближайшее предприятие:</strong> {selectedEnterprise?.title}</p>
-                  </div>
-                  {!user && (
-                    <PrimaryButton className="mt-4 w-full" onClick={() => setRegisterOpen(true)}>
-                      <LogIn size={18} />
-                      Создать аккаунт
-                    </PrimaryButton>
-                  )}
-                </div>
-                <div className="grid gap-4">
-                  <StatusPanel title="Рекомендация по специальности" emptyText="Пройдите тест, чтобы увидеть подходящее направление.">
-                    {careerResult && (
-                      <div className="rounded-lg border border-line bg-white p-4">
-                        <p className="text-xs font-bold uppercase text-amber">{careerResult.score_profile}</p>
-                        <h3 className="mt-2 text-xl font-bold">{careerResult.specialty}</h3>
-                        {careerResult.backup_specialty && <p className="mt-2 text-sm font-semibold">Запасное направление: {careerResult.backup_specialty}</p>}
-                        <p className="mt-2 text-sm leading-6 text-[#53615a]">{careerResult.explanation}</p>
-                        <PrimaryButton className="mt-4" onClick={() => {
-                          setScheduleProfile(careerResult.excursion_profile || careerResult.score_profile);
-                          setActiveTab('schedule');
-                        }}>
-                          Смотреть подходящие экскурсии
-                        </PrimaryButton>
-                      </div>
-                    )}
-                  </StatusPanel>
-                  <StatusPanel title="Мои активные записи" emptyText="Вы ещё не записались на экскурсию.">
-                    {bookings.length > 0 && (
-                      <div className="grid gap-3">
-                        {bookings.map((booking) => (
-                          <div key={booking.id} className="rounded-lg border border-line bg-white p-4">
-                            <p className="text-xs font-bold uppercase text-[#2858d6]">{booking.status === 'cancelled_by_user' ? 'Отменена пользователем' : 'Подтверждена'}</p>
-                            <h3 className="mt-2 font-bold">{booking.enterprise}</h3>
-                            <p className="mt-1 text-sm text-[#53615a]">{formatDate(booking.starts_at)}</p>
-                            {booking.status !== 'cancelled_by_user' && (
-                              <button type="button" onClick={() => cancelBooking(booking.id)} className="mt-3 text-sm font-bold text-[#b95642]">Отменить запись</button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </StatusPanel>
-                  <section>
-                    <h2 className="mb-3 text-xl font-bold">Достижения</h2>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-lg border border-[#b9caff] bg-[#f3f6ff] p-4"><strong>Первый шаг</strong><p className="mt-1 text-sm text-[#53615a]">Профиль создан в ПромНавигаторе.</p></div>
-                      {careerResult && <div className="rounded-lg border border-[#f2d28f] bg-[#fff8e9] p-4"><strong>Профессия найдена</strong><p className="mt-1 text-sm text-[#53615a]">Пройден профориентационный тест.</p></div>}
-                    </div>
-                  </section>
-                  <StatusPanel title="Подтверждение записи" emptyText="После записи здесь появятся адрес, дата, время и комментарий предприятия.">
-                    {confirmation && (
-                      <div className="rounded-lg border border-teal bg-[#f3fbf9] p-4">
-                        <div className="flex items-start gap-3">
-                          <BadgeCheck className="mt-1 text-teal" size={22} />
-                          <div>
-                            <p className="text-xs font-bold uppercase text-teal">Запись подтверждена</p>
-                            <h3 className="mt-2 text-xl font-bold">{confirmation.enterprise}</h3>
-                            <div className="mt-3 grid gap-2 text-sm">
-                              <p><strong>Адрес:</strong> {confirmation.address}</p>
-                              <p><strong>Дата и время:</strong> {formatDate(confirmation.starts_at)}</p>
-                              <p><strong>Комментарий:</strong> {confirmation.guide_comment}</p>
-                              <p><strong>Техника безопасности:</strong> {confirmation.safety_note}</p>
-                            </div>
-                            <div className="mt-4 rounded-lg border border-line bg-white p-3">
-                              <p className="text-sm font-semibold text-ink">Напоминание после экскурсии</p>
-                              <p className="mt-1 text-sm leading-6 text-[#53615a]">
-                                Вернитесь в веб-приложение после посещения, оцените экскурсию, откройте Яндекс-анкету
-                                и сохраните впечатления в цифровом паспорте.
-                              </p>
-                              <PrimaryButton className="mt-3" onClick={() => setActiveTab('feedback')}>
-                                <MessageSquareText size={18} />
-                                Оставить отзыв
-                              </PrimaryButton>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </StatusPanel>
-                  <StatusPanel title="Обратная связь" emptyText="После экскурсии здесь появится оценка и сохранённые впечатления туриста.">
-                    {feedbackResult && (
-                      <div className="rounded-lg border border-line bg-white p-4">
-                        <p className="text-xs font-bold uppercase text-teal">Отзыв сохранён</p>
-                        <h3 className="mt-2 text-xl font-bold">Оценка: {feedbackResult.rating}/5</h3>
-                        <p className="mt-2 text-sm leading-6 text-[#53615a]">{feedbackResult.impressions}</p>
-                        <p className="mt-3 text-sm text-[#53615a]">
-                          Яндекс-анкета: {feedbackResult.yandex_completed ? 'пройдена' : 'ожидает прохождения'}
-                        </p>
-                      </div>
-                    )}
-                  </StatusPanel>
-                </div>
-              </div>
-            </section>
+            <StudentDashboard
+              user={user}
+              careerResult={careerResult}
+              bookings={bookings}
+              confirmation={confirmation}
+              feedbackResult={feedbackResult}
+              onStartTest={() => {
+                setTestStep(0);
+                setActiveTab('test');
+              }}
+              onOpenSchedule={(profile = 'technical') => {
+                setScheduleProfile(profile);
+                setActiveTab('schedule');
+              }}
+              onOpenFeedback={() => setActiveTab('feedback')}
+              onCancelBooking={cancelBooking}
+            />
           )}
 
           {activeTab === 'feedback' && (
@@ -812,6 +788,10 @@ export default function App() {
         <Modal title="Регистрация туриста" onClose={() => setRegisterOpen(false)}>
           <form className="grid gap-3" onSubmit={submitRegister}>
             <TextInput name="full_name" required placeholder="ФИО" />
+            <div className="grid gap-3 sm:grid-cols-[120px_1fr]">
+              <TextInput name="class_name" required placeholder="Класс" defaultValue="9Б" />
+              <TextInput name="school" required placeholder="Школа" defaultValue={demoStudentProfile.school} />
+            </div>
             <TextInput name="email" required type="email" placeholder="E-mail" />
             <TextInput name="phone" required pattern="^[0-9+()\\-\\s]{7,}$" placeholder="Номер телефона" />
             <TextInput name="password" required type="password" minLength="6" placeholder="Пароль" />
@@ -857,6 +837,344 @@ export default function App() {
           </form>
         </Modal>
       )}
+    </div>
+  );
+}
+
+function StudentDashboard({
+  user,
+  careerResult,
+  bookings,
+  confirmation,
+  feedbackResult,
+  onStartTest,
+  onOpenSchedule,
+  onOpenFeedback,
+  onCancelBooking
+}) {
+  const profile = demoStudentProfile;
+  const recommendation = careerResult || {
+    specialty: 'Инженер-технолог / Автоматизация производств',
+    backup_specialty: 'Инженер по промышленной робототехнике',
+    explanation: 'Сильные результаты по математике, физике и информатике сочетаются с опытом проектной работы.',
+    excursion_profile: 'technical'
+  };
+  const initials = (user.full_name || 'Ученик')
+    .split(' ')
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+  const activeBookings = bookings.filter((booking) => booking.status !== 'cancelled_by_user');
+  const testHistory = careerResult
+    ? [
+        {
+          title: 'Профориентационный тест',
+          date: 'Сегодня',
+          result: careerResult.specialty,
+          source: 'Встроенный'
+        },
+        ...profile.testHistory
+      ]
+    : profile.testHistory;
+
+  return (
+    <section className="grid gap-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-[#2858d6]">Личный кабинет</p>
+          <h2 className="mt-1 text-2xl font-bold sm:text-3xl">Мой цифровой паспорт</h2>
+        </div>
+        <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#66736c]">
+          <CheckCircle2 size={17} className="text-teal" />
+          Данные ГИС обновлены: {profile.gisUpdated}
+        </p>
+      </div>
+
+      <section className="grid gap-5 rounded-lg border border-[#cad6f3] bg-white p-5 shadow-sm lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="grid h-20 w-20 shrink-0 place-items-center rounded-full bg-[#2858d6] text-2xl font-black text-white">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#66736c]">Добро пожаловать,</p>
+            <h3 className="mt-1 text-2xl font-bold">{user.full_name}</h3>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm text-[#53615a]">
+              <span className="inline-flex items-center gap-2"><GraduationCap size={17} />{user.class_name || profile.className} класс</span>
+              <span className="inline-flex items-center gap-2"><School size={17} />{user.school || profile.school}</span>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:min-w-[330px]">
+          <ProfileMetric value="4,8" label="Средний балл" />
+          <ProfileMetric value={String(profile.visitedExcursions.length)} label="Экскурсии" />
+          <ProfileMetric value={String(testHistory.length)} label="Тесты" />
+        </div>
+      </section>
+
+      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+        <section className="rounded-lg border border-line bg-white p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase text-teal">Карта навыков</p>
+              <h3 className="mt-1 text-xl font-bold">Компетенции и soft skills</h3>
+            </div>
+            <span className="rounded-lg bg-[#e7f2ef] px-3 py-2 text-xs font-bold text-teal">На основе данных ГИС</span>
+          </div>
+          <SkillRadar skills={profile.skills} />
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+            {profile.skills.map((skill) => (
+              <div key={skill.label}>
+                <div className="mb-1 flex items-center justify-between gap-2 text-xs font-semibold">
+                  <span className="truncate">{skill.label}</span>
+                  <span>{skill.value}%</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded bg-[#e4e8ef]">
+                  <div className="h-full rounded bg-teal" style={{ width: `${skill.value}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="flex flex-col rounded-lg border border-[#b9caff] bg-[#f5f7ff] p-5">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-lg bg-[#2858d6] text-white">
+              <Target size={22} />
+            </div>
+            <div>
+              <p className="text-xs font-bold uppercase text-[#2858d6]">Рекомендуемый профиль сегодня</p>
+              <p className="mt-1 text-sm text-[#66736c]">Совпадение с профилем: 87%</p>
+            </div>
+          </div>
+          <h3 className="mt-5 text-2xl font-bold leading-tight">{recommendation.specialty}</h3>
+          <p className="mt-3 text-sm leading-6 text-[#53615a]">{recommendation.explanation}</p>
+          <div className="mt-4 border-l-4 border-amber pl-3">
+            <p className="text-xs font-bold uppercase text-[#8b5b00]">Смежное направление</p>
+            <p className="mt-1 text-sm font-semibold">{recommendation.backup_specialty}</p>
+          </div>
+          <div className="mt-auto grid gap-2 pt-6 sm:grid-cols-2">
+            <PrimaryButton onClick={onStartTest}>
+              <BrainCircuit size={18} />
+              Пройти экспресс-тест
+            </PrimaryButton>
+            <IconButton className="h-11" onClick={() => onOpenSchedule(recommendation.excursion_profile)}>
+              Подобрать экскурсии
+              <ChevronRight size={18} />
+            </IconButton>
+          </div>
+        </section>
+      </div>
+
+      <section>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-xs font-bold uppercase text-[#2858d6]">Синхронизировано из ГИС</p>
+            <h3 className="mt-1 text-xl font-bold">Мои данные</h3>
+          </div>
+          <span className="text-sm text-[#66736c]">Учебный профиль 2025/2026</span>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <DataCard icon={BookOpen} title="Успеваемость">
+            <div className="grid gap-2">
+              {profile.grades.map((grade) => (
+                <div key={grade.subject} className="flex items-center justify-between gap-3 border-b border-line pb-2 last:border-0 last:pb-0">
+                  <span className="text-sm font-semibold">{grade.subject}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#e7f2ef] font-bold text-teal">{grade.value}</span>
+                    <span className="text-xs font-bold text-teal">{grade.trend}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </DataCard>
+          <DataCard icon={Trophy} title="Олимпиады">
+            <div className="grid gap-3">
+              {profile.olympiads.map((item) => (
+                <div key={item.title}>
+                  <p className="text-sm font-bold">{item.title}</p>
+                  <p className="mt-1 text-xs text-[#66736c]">{item.level}</p>
+                  <span className="mt-2 inline-flex rounded-lg bg-[#fff3d8] px-2 py-1 text-xs font-bold text-[#8b5b00]">{item.result}</span>
+                </div>
+              ))}
+            </div>
+          </DataCard>
+          <DataCard icon={Activity} title="Внеклассная деятельность">
+            <div className="grid gap-3">
+              {profile.activities.map((item) => (
+                <div key={item.title} className="flex items-start gap-3">
+                  <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-teal" />
+                  <div>
+                    <p className="text-sm font-bold">{item.title}</p>
+                    <p className="mt-1 text-xs text-[#66736c]">{item.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DataCard>
+        </div>
+      </section>
+
+      {activeBookings.length > 0 && (
+        <section>
+          <h3 className="mb-3 text-xl font-bold">Предстоящие экскурсии</h3>
+          <div className="grid gap-3 md:grid-cols-2">
+            {activeBookings.map((booking) => (
+              <article key={booking.id} className="rounded-lg border border-[#b9caff] bg-white p-4">
+                <p className="text-xs font-bold uppercase text-[#2858d6]">Запись подтверждена</p>
+                <h4 className="mt-2 font-bold">{booking.enterprise}</h4>
+                <p className="mt-1 text-sm text-[#53615a]">{formatDate(booking.starts_at)}</p>
+                <button type="button" onClick={() => onCancelBooking(booking.id)} className="mt-3 text-sm font-bold text-[#b95642]">Отменить запись</button>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <Award size={21} className="text-amber" />
+            <h3 className="text-xl font-bold">Посещённые экскурсии</h3>
+          </div>
+          <div className="grid gap-3">
+            {profile.visitedExcursions.map((excursion) => (
+              <article key={excursion.enterprise} className="rounded-lg border border-line bg-white p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h4 className="font-bold">{excursion.enterprise}</h4>
+                    <p className="mt-1 text-sm text-[#66736c]">{excursion.date}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-[#fff3d8] px-2 py-1 text-sm font-bold text-[#8b5b00]">
+                    <Star size={15} fill="currentColor" />{excursion.rating}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-[#53615a]"><strong className="text-ink">Полученные знания:</strong> {excursion.knowledge}</p>
+              </article>
+            ))}
+            {feedbackResult && (
+              <article className="rounded-lg border border-teal bg-[#f3fbf9] p-4">
+                <p className="text-xs font-bold uppercase text-teal">Последний отзыв</p>
+                <p className="mt-2 text-sm leading-6">{feedbackResult.impressions}</p>
+                <p className="mt-2 text-sm font-bold">Оценка: {feedbackResult.rating}/5</p>
+              </article>
+            )}
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <ClipboardCheck size={21} className="text-[#2858d6]" />
+            <h3 className="text-xl font-bold">Результаты тестов</h3>
+          </div>
+          <div className="overflow-hidden rounded-lg border border-line bg-white">
+            {testHistory.map((test) => (
+              <div key={`${test.title}-${test.date}`} className="grid gap-2 border-b border-line p-4 last:border-0 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="font-bold">{test.title}</h4>
+                    <span className="rounded-lg bg-[#eef3ff] px-2 py-1 text-xs font-bold text-[#2858d6]">{test.source}</span>
+                  </div>
+                  <p className="mt-1 text-sm text-[#53615a]">{test.result}</p>
+                </div>
+                <p className="text-xs font-semibold text-[#66736c]">{test.date}</p>
+              </div>
+            ))}
+          </div>
+          <PrimaryButton className="mt-3" onClick={onStartTest}>
+            <BrainCircuit size={18} />
+            Пройти новый тест
+          </PrimaryButton>
+        </section>
+      </div>
+
+      {confirmation && (
+        <section className="rounded-lg border border-teal bg-[#f3fbf9] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase text-teal">Напоминание после экскурсии</p>
+              <h3 className="mt-1 font-bold">{confirmation.enterprise}</h3>
+              <p className="mt-1 text-sm text-[#53615a]">Оцените экскурсию и сохраните новые впечатления в паспорте.</p>
+            </div>
+            <PrimaryButton onClick={onOpenFeedback}>
+              <MessageSquareText size={18} />
+              Оставить отзыв
+            </PrimaryButton>
+          </div>
+        </section>
+      )}
+    </section>
+  );
+}
+
+function ProfileMetric({ value, label }) {
+  return (
+    <div className="min-w-0 border-l border-line px-3 first:border-l-0">
+      <p className="text-xl font-bold text-[#2858d6]">{value}</p>
+      <p className="mt-1 text-xs leading-4 text-[#66736c]">{label}</p>
+    </div>
+  );
+}
+
+function DataCard({ icon: Icon, title, children }) {
+  return (
+    <article className="rounded-lg border border-line bg-white p-4">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#eef3ff] text-[#2858d6]">
+          <Icon size={19} />
+        </div>
+        <h4 className="font-bold">{title}</h4>
+      </div>
+      {children}
+    </article>
+  );
+}
+
+function SkillRadar({ skills }) {
+  const center = { x: 180, y: 145 };
+  const radius = 92;
+  const levels = [0.25, 0.5, 0.75, 1];
+  const pointAt = (index, scale = 1) => {
+    const angle = -Math.PI / 2 + (index * Math.PI * 2) / skills.length;
+    return {
+      x: center.x + Math.cos(angle) * radius * scale,
+      y: center.y + Math.sin(angle) * radius * scale
+    };
+  };
+  const polygon = (scale) => skills.map((_, index) => {
+    const point = pointAt(index, scale);
+    return `${point.x},${point.y}`;
+  }).join(' ');
+  const values = skills.map((skill, index) => {
+    const point = pointAt(index, skill.value / 100);
+    return `${point.x},${point.y}`;
+  }).join(' ');
+
+  return (
+    <div className="mx-auto my-2 w-full max-w-[420px]">
+      <svg viewBox="0 0 360 290" role="img" aria-label="Радарная карта навыков" className="h-auto w-full">
+        {levels.map((level) => (
+          <polygon key={level} points={polygon(level)} fill={level === 1 ? '#f7f9fc' : 'none'} stroke="#d9e0ea" strokeWidth="1" />
+        ))}
+        {skills.map((skill, index) => {
+          const point = pointAt(index);
+          return <line key={skill.label} x1={center.x} y1={center.y} x2={point.x} y2={point.y} stroke="#d9e0ea" strokeWidth="1" />;
+        })}
+        <polygon points={values} fill="rgba(40, 88, 214, 0.18)" stroke="#2858d6" strokeWidth="3" />
+        {skills.map((skill, index) => {
+          const point = pointAt(index, skill.value / 100);
+          const labelPoint = pointAt(index, 1.28);
+          const anchor = labelPoint.x < center.x - 12 ? 'end' : labelPoint.x > center.x + 12 ? 'start' : 'middle';
+          return (
+            <g key={skill.label}>
+              <circle cx={point.x} cy={point.y} r="4" fill="#2858d6" />
+              <text x={labelPoint.x} y={labelPoint.y} textAnchor={anchor} dominantBaseline="middle" className="fill-[#3f4b46] text-[10px] font-semibold">
+                {skill.shortLabel}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }
