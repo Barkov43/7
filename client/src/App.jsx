@@ -210,6 +210,7 @@ export default function App() {
   });
   const [registerOpen, setRegisterOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [bookingTarget, setBookingTarget] = useState(null);
   const [bookingForm, setBookingForm] = useState({ visitor_name: '', email: '', phone: '' });
   const [confirmation, setConfirmation] = useState(null);
@@ -405,7 +406,7 @@ export default function App() {
             <button type="button" onClick={() => setActiveTab('news')} className="focus-ring rounded-lg px-3 py-3 text-sm font-semibold text-[#596274]">Новости</button>
           </div>
           <div className="flex items-center gap-2">
-            <IconButton aria-label="Уведомления" title="Уведомления">
+            <IconButton aria-label="Уведомления" title="Уведомления" onClick={() => setNotificationsOpen(true)}>
               <Bell size={18} />
             </IconButton>
             {user ? (
@@ -817,6 +818,44 @@ export default function App() {
               Войти
             </PrimaryButton>
           </form>
+        </Modal>
+      )}
+
+      {notificationsOpen && (
+        <Modal title="Уведомления" onClose={() => setNotificationsOpen(false)}>
+          <div className="grid gap-3">
+            <div className="rounded-lg border border-[#b9caff] bg-[#f3f6ff] p-4">
+              <p className="text-xs font-bold uppercase text-[#2858d6]">Рекомендация</p>
+              <p className="mt-2 font-bold">Уточните профессиональные интересы</p>
+              <p className="mt-1 text-sm leading-6 text-[#53615a]">Экспресс-тест поможет обновить рекомендуемый профиль и подборку экскурсий.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setNotificationsOpen(false);
+                  setTestStep(0);
+                  setActiveTab('test');
+                }}
+                className="mt-3 text-sm font-bold text-[#2858d6]"
+              >
+                Перейти к тесту
+              </button>
+            </div>
+            <div className="rounded-lg border border-line bg-white p-4">
+              <p className="text-xs font-bold uppercase text-teal">Новые экскурсии</p>
+              <p className="mt-2 font-bold">Открыта запись на июнь</p>
+              <p className="mt-1 text-sm leading-6 text-[#53615a]">В расписании появились новые маршруты промышленных предприятий Кировской области.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setNotificationsOpen(false);
+                  setActiveTab('schedule');
+                }}
+                className="mt-3 text-sm font-bold text-teal"
+              >
+                Открыть расписание
+              </button>
+            </div>
+          </div>
         </Modal>
       )}
 
